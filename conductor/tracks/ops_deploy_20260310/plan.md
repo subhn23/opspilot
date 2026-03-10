@@ -8,13 +8,13 @@
 - [x] Task: Write tests for `ScanImage` with a mock scanner (61c3608)
 - [x] Task: Conductor - User Manual Verification 'Security Scanning' (Protocol in workflow.md)
 
-## Phase 2: Remote Deployment (SSH) [checkpoint: ]
+## Phase 2: Remote Deployment (SSH) [checkpoint: e34f854]
 **Goal:** Implement the `RemoteUp` logic using SSH.
 
 - [x] Task: Define `SSHClient` interface for command execution (22bee6c)
 - [x] Task: Implement `RemoteUp` command sequence (pull, up) (22bee6c)
 - [x] Task: Write tests for `RemoteUp` using a mock SSH client (22bee6c)
-- [ ] Task: Conductor - User Manual Verification 'Remote Deployment' (Protocol in workflow.md)
+- [x] Task: Conductor - User Manual Verification 'Remote Deployment' (Protocol in workflow.md)
 
 ## Phase 3: Engine Orchestration [checkpoint: ]
 **Goal:** Connect all pieces in `BuildAndPush` and `Deploy` flows.
