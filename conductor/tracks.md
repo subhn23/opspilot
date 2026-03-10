@@ -7,8 +7,6 @@ This file tracks all major tracks for the project. Each track has its own detail
 ## Phase 1: Foundation (Core Control Plane)
 
 ## Phase 2: Dynamic Infrastructure (Terraform & Docker)
-- [x] **Track: 2.2: OpsDeploy Engine**
-  *Link: [./tracks/ops_deploy_20260310/](./tracks/ops_deploy_20260310/)*
 - [ ] **Track: 2.3: Windows DNS Integration**
 
 ## Phase 3: Governance & Operations (Visibility & Safety)
