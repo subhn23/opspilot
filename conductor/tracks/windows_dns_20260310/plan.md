@@ -11,9 +11,9 @@
 ## Phase 2: Verification & Verification [checkpoint: ]
 **Goal:** Implement DNS lookup verification and manual fallback.
 
-- [ ] Task: Implement `VerifyDNS` using `net.LookupIP`
-- [ ] Task: Implement `RequestManualDNS` blocking logic (mocked UI trigger)
-- [ ] Task: Write tests for `VerifyDNS`
+- [x] Task: Implement `VerifyDNS` using `net.LookupIP` (d9fe993)
+- [x] Task: Implement `RequestManualDNS` blocking logic (mocked UI trigger) (d9fe993)
+- [x] Task: Write tests for `VerifyDNS` (d9fe993)
 - [ ] Task: Conductor - User Manual Verification 'Verification & Fallback' (Protocol in workflow.md)
 
 ## Phase 3: Integration & Logging [checkpoint: ]
