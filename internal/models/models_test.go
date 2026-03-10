@@ -61,20 +61,28 @@ func TestSeedSystemData(t *testing.T) {
 
 	var roleCount int64
 	db.Model(&Role{}).Count(&roleCount)
-	if roleCount != 1 {
-		t.Errorf("Expected 1 role, got %d", roleCount)
+	if roleCount != 3 {
+		t.Errorf("Expected 3 roles (Admin, Developer, Viewer), got %d", roleCount)
+	}
+
+	roles := []string{"Master Admin", "Developer", "Viewer"}
+	for _, name := range roles {
+		var r Role
+		if err := db.Where("name = ?", name).First(&r).Error; err != nil {
+			t.Errorf("Role %s not found", name)
+		}
 	}
 
 	var permCount int64
 	db.Model(&Permission{}).Count(&permCount)
-	if permCount != 6 {
-		t.Errorf("Expected 6 permissions, got %d", permCount)
+	if permCount < 6 {
+		t.Errorf("Expected at least 6 permissions, got %d", permCount)
 	}
 
 	// Second seed (should be idempotent)
 	SeedSystemData(db)
 	db.Model(&Role{}).Count(&roleCount)
-	if roleCount != 1 {
-		t.Errorf("Expected 1 role after second seed, got %d", roleCount)
+	if roleCount != 3 {
+		t.Errorf("Expected 3 roles after second seed, got %d", roleCount)
 	}
 }

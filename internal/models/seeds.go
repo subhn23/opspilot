@@ -31,13 +31,35 @@ func SeedSystemData(db *gorm.DB) {
 		db.FirstOrCreate(&permissions[i], Permission{Slug: permissions[i].Slug})
 	}
 
-	// 2. Create Master Admin Role
-	masterAdmin := Role{
-		ID:          uuid.New(),
-		Name:        "Master Admin",
-		Permissions: permissions,
+	// 2. Define Roles
+	roles := []Role{
+		{
+			ID:          uuid.New(),
+			Name:        "Master Admin",
+			Permissions: permissions, // All permissions
+		},
+		{
+			ID:   uuid.New(),
+			Name: "Developer",
+			Permissions: []Permission{
+				permissions[0], // proxy:read
+				permissions[2], // deploy:read
+				permissions[3], // deploy:write
+			},
+		},
+		{
+			ID:   uuid.New(),
+			Name: "Viewer",
+			Permissions: []Permission{
+				permissions[0], // proxy:read
+				permissions[2], // deploy:read
+			},
+		},
 	}
-	db.Create(&masterAdmin)
 
-	log.Println("Seeding completed: Master Admin role created.")
+	for _, r := range roles {
+		db.Create(&r)
+	}
+
+	log.Println("Seeding completed: Default roles created.")
 }
