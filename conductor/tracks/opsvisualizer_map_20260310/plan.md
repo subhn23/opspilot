@@ -1,12 +1,12 @@
 # Plan for Track 3.1: OpsVisualizer Map
 
-## Phase 1: Topology Engine [checkpoint: ]
+## Phase 1: Topology Engine [checkpoint: 30b327a]
 **Goal:** Implement the logic to build the graph data from the database.
 
 - [x] Task: Define Node and Edge models in `internal/models/models.go` (if not already present) (bca49f4)
 - [x] Task: Implement `BuildTopology` logic in `internal/visualizer/visualizer.go` (7699322)
 - [~] Task: Write tests for `BuildTopology` with various DB states
-- [ ] Task: Conductor - User Manual Verification 'Topology Engine' (Protocol in workflow.md)
+- [x] Task: Conductor - User Manual Verification 'Topology Engine' (Protocol in workflow.md)
 
 ## Phase 2: WebSocket Streaming [checkpoint: ]
 **Goal:** Stream topology updates to the frontend.
