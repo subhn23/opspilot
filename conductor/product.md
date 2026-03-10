@@ -17,6 +17,7 @@ OpsPilot aims to provide a "Kubernetes-like" experience for developers and IT te
 - **Observability & Visualization:** Real-time monitoring and an interactive topology map for clear stack status.
 
 ## Key Features
+- **Audit & Identity:** Robust authentication with JWT and TOTP MFA, coupled with a granular RBAC system and immutable action logging.
 - **OpsProxy & SSL:** Native Go-based reverse proxy with integrated SSL certificate management.
 - **OpsVisualizer Map:** Interactive node-based map for visualizing the network and service architecture.
 - **Multi-Env Support:** Robust support for Production, Staging, Testing, and Feature environments.
