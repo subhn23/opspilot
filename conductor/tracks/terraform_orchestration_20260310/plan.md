@@ -1,11 +1,11 @@
 # Plan for Track 2.1: Terraform Orchestration Engine
 
-## Phase 1: Environment Models & Setup [checkpoint: ]
+## Phase 1: Environment Models ## Phase 1: Environment Models & Setup [checkpoint: ] Setup [checkpoint: 0d021f1]
 **Goal:** Define the `Environment` model and prepare the Terraform workspace manager.
 
 - [x] Task: Verify/Create `Environment` model in `internal/models/models.go` (d3198d5)
 - [x] Task: Ensure `AutoMigrate` includes the `Environment` model (N/A - Already included)
-- [ ] Task: Conductor - User Manual Verification 'Environment Models & Setup' (Protocol in workflow.md)
+- [x] Task: Conductor - User Manual Verification 'Environment Models - [ ] Task: Conductor - User Manual Verification 'Environment Models & Setup' (Protocol in workflow.md) Setup' (Protocol in workflow.md)
 
 ## Phase 2: TFEngine Core & Testing Strategy [checkpoint: ]
 **Goal:** Build the `TFEngine` structure and establish a testable interface.
