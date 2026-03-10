@@ -3,6 +3,7 @@ package dns
 import (
 	"context"
 	"fmt"
+	"net"
 	"testing"
 )
 
@@ -15,6 +16,58 @@ type MockSSHClient struct {
 func (m *MockSSHClient) RunCommand(ctx context.Context, addr, command string) (string, error) {
 	m.LastCommand = command
 	return m.MockOutput, m.MockErr
+}
+
+type MockResolver struct {
+	MockIPs []net.IP
+	MockErr error
+}
+
+func (m *MockResolver) LookupIP(ctx context.Context, network, host string) ([]net.IP, error) {
+	return m.MockIPs, m.MockErr
+}
+
+func TestVerifyDNS(t *testing.T) {
+	ctx := context.Background()
+
+	t.Run("Match", func(t *testing.T) {
+		mockRes := &MockResolver{MockIPs: []net.IP{net.ParseIP("10.0.0.1")}}
+		mgr := NewDNSManager("dns.local", "opspilot.local", nil)
+		mgr.Resolver = mockRes
+
+		verified, err := mgr.VerifyDNS(ctx, "app", "10.0.0.1")
+		if err != nil {
+			t.Errorf("Unexpected error: %v", err)
+		}
+		if !verified {
+			t.Error("Expected verification to pass")
+		}
+	})
+
+	t.Run("No Match", func(t *testing.T) {
+		mockRes := &MockResolver{MockIPs: []net.IP{net.ParseIP("10.0.0.2")}}
+		mgr := NewDNSManager("dns.local", "opspilot.local", nil)
+		mgr.Resolver = mockRes
+
+		verified, err := mgr.VerifyDNS(ctx, "app", "10.0.0.1")
+		if err != nil {
+			t.Errorf("Unexpected error: %v", err)
+		}
+		if verified {
+			t.Error("Expected verification to fail")
+		}
+	})
+
+	t.Run("Error", func(t *testing.T) {
+		mockRes := &MockResolver{MockErr: fmt.Errorf("timeout")}
+		mgr := NewDNSManager("dns.local", "opspilot.local", nil)
+		mgr.Resolver = mockRes
+
+		_, err := mgr.VerifyDNS(ctx, "app", "10.0.0.1")
+		if err == nil {
+			t.Error("Expected error, got nil")
+		}
+	})
 }
 
 func TestUpdateRecordA(t *testing.T) {
