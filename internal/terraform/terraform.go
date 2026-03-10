@@ -20,7 +20,7 @@ type TFEngine struct {
 
 func NewTFEngine(db *gorm.DB, workingDir string) (*TFEngine, error) {
 	execPath := "terraform" // Assume in PATH, otherwise provide absolute path
-	
+
 	// Create working directory if it doesn't exist
 	if _, err := os.Stat(workingDir); os.IsNotExist(err) {
 		os.MkdirAll(workingDir, 0755)

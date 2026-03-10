@@ -19,6 +19,7 @@ type User struct {
 	UpdatedAt    time.Time
 	DeletedAt    gorm.DeletedAt `gorm:"index"`
 }
+
 // Role represents a group of permissions (Admin, Developer, etc.)
 type Role struct {
 	ID          uuid.UUID    `gorm:"type:uuid;primaryKey"`

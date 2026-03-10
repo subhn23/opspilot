@@ -11,7 +11,7 @@ import (
 var upgrader = websocket.Upgrader{
 	ReadBufferSize:  1024,
 	WriteBufferSize: 1024,
-	CheckOrigin: func(r *http.Request) bool { return true },
+	CheckOrigin:     func(r *http.Request) bool { return true },
 }
 
 type MetricStreamer struct{}
@@ -36,7 +36,7 @@ func (s *MetricStreamer) StreamStats(w http.ResponseWriter, r *http.Request) {
 			"memory": "256MB / 2GB",
 			"time":   time.Now().Format(time.Kitchen),
 		}
-		
+
 		if err := conn.WriteJSON(stats); err != nil {
 			return
 		}

@@ -93,7 +93,7 @@ func TestAuthMiddleware(t *testing.T) {
 	token, _ := GenerateToken(userID, roleID, secret, 1*time.Hour)
 	w := httptest.NewRecorder()
 	c, r := gin.CreateTestContext(w)
-	
+
 	// Mock environment for JWT secret
 	os.Setenv("JWT_SECRET", secret)
 	defer os.Unsetenv("JWT_SECRET")

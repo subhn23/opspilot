@@ -9,8 +9,8 @@ import (
 type Node struct {
 	ID    string            `json:"id"`
 	Label string            `json:"label"`
-	Type  string            `json:"type"`   // Firewall, VM, Container
-	State string            `json:"state"`  // Healthy, Down, Provisioning
+	Type  string            `json:"type"`  // Firewall, VM, Container
+	State string            `json:"state"` // Healthy, Down, Provisioning
 	Meta  map[string]string `json:"meta"`
 }
 
@@ -54,6 +54,6 @@ func (v *OpsVisualizer) BuildTopology() ([]Node, []Edge) {
 
 	// 3. Add individual Services (Containers)
 	// Conceptual: Loop through active deployments per environment
-	
+
 	return nodes, edges
 }

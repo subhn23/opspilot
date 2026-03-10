@@ -22,7 +22,7 @@ func NewDeployer(db *gorm.DB) *Deployer {
 // ScanImage runs a Trivy vulnerability scan on the image
 func (d *Deployer) ScanImage(imageName string) (bool, string, error) {
 	log.Printf("Starting security scan for image: %s", imageName)
-	
+
 	// Conceptual: exec.Command("trivy", "image", "--severity", "CRITICAL", imageName)
 	// For now, assume it's clean
 	return true, "No critical vulnerabilities found.", nil
@@ -31,7 +31,7 @@ func (d *Deployer) ScanImage(imageName string) (bool, string, error) {
 // BuildAndPush triggers a local docker build and pushes to the mirrored registry
 func (d *Deployer) BuildAndPush(ctx context.Context, deploy *models.Deployment) error {
 	d.updateStatus(deploy, "BUILDING")
-	
+
 	// ... (build logic) ...
 	imageName := fmt.Sprintf("localhost:5000/app:%s", deploy.CommitHash)
 
@@ -59,7 +59,7 @@ func (d *Deployer) RemoteUp(ctx context.Context, deploy *models.Deployment, targ
 	// 3. docker-compose up -d
 
 	log.Printf("Executing remote deploy to %s", targetIP)
-	
+
 	// Mock success for now
 	d.updateStatus(deploy, "SUCCESS")
 	return nil
