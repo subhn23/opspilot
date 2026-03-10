@@ -17,11 +17,14 @@
 - [x] Task: Implement TOTP logic (using a standard library like `pquerna/otp`) (639ce6a)
 - [x] Task: Conductor - User Manual Verification 'Core Authentication Logic' (Protocol in workflow.md)
 
-## Phase 3: Middleware ## Phase 3: Middleware & Security Integration [checkpoint: ] Security Integration [checkpoint: a239c16]
+## Phase 3: Middleware & Security Integration [checkpoint: a239c16]
 **Goal:** Protect routes and enforce RBAC.
 
 - [x] Task: Write tests for `AuthMiddleware` (81d93b9)
 - [x] Task: Implement `AuthMiddleware` in `internal/auth/auth.go` (6ca60eb)
 - [x] Task: Write tests for `RequirePermission` RBAC middleware (b3d0289)
 - [x] Task: Implement `RequirePermission` middleware (4c8b082)
-- [x] Task: Conductor - User Manual Verification 'Middleware - [ ] Task: Conductor - User Manual Verification 'Middleware & Security Integration' (Protocol in workflow.md) Security Integration' (Protocol in workflow.md)
+- [x] Task: Conductor - User Manual Verification 'Middleware & Security Integration' (Protocol in workflow.md)
+
+## Phase: Review Fixes
+- [x] Task: Apply review suggestions a133c71
