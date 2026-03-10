@@ -6,26 +6,49 @@ import (
 	"log"
 	"opspilot/internal/models"
 	"os/exec"
-	"time"
 
 	"gorm.io/gorm"
 )
 
+// Scanner abstracts the vulnerability scanning logic
+type Scanner interface {
+	Scan(ctx context.Context, imageName string) (bool, string, error)
+}
+
+// RealScanner uses the Trivy binary to scan images
+type RealScanner struct{}
+
+func (s *RealScanner) Scan(ctx context.Context, imageName string) (bool, string, error) {
+	log.Printf("Trivy: Scanning image %s", imageName)
+	cmd := exec.CommandContext(ctx, "trivy", "image", "--severity", "CRITICAL,HIGH", "--exit-code", "1", imageName)
+	output, err := cmd.CombinedOutput()
+
+	if err != nil {
+		// If exit code is 1, vulnerabilities were found
+		if exitErr, ok := err.(*exec.ExitError); ok && exitErr.ExitCode() == 1 {
+			return false, string(output), nil
+		}
+		return false, string(output), fmt.Errorf("trivy execution failed: %w", err)
+	}
+
+	return true, "No critical or high vulnerabilities found.", nil
+}
+
 type Deployer struct {
-	DB *gorm.DB
+	DB      *gorm.DB
+	Scanner Scanner
 }
 
 func NewDeployer(db *gorm.DB) *Deployer {
-	return &Deployer{DB: db}
+	return &Deployer{
+		DB:      db,
+		Scanner: &RealScanner{},
+	}
 }
 
-// ScanImage runs a Trivy vulnerability scan on the image
-func (d *Deployer) ScanImage(imageName string) (bool, string, error) {
-	log.Printf("Starting security scan for image: %s", imageName)
-
-	// Conceptual: exec.Command("trivy", "image", "--severity", "CRITICAL", imageName)
-	// For now, assume it's clean
-	return true, "No critical vulnerabilities found.", nil
+// ScanImage runs a vulnerability scan on the image using the configured scanner
+func (d *Deployer) ScanImage(ctx context.Context, imageName string) (bool, string, error) {
+	return d.Scanner.Scan(ctx, imageName)
 }
 
 // BuildAndPush triggers a local docker build and pushes to the mirrored registry
@@ -37,7 +60,7 @@ func (d *Deployer) BuildAndPush(ctx context.Context, deploy *models.Deployment) 
 
 	// SECURITY SCAN
 	d.updateStatus(deploy, "SCANNING")
-	safe, report, err := d.ScanImage(imageName)
+	safe, report, err := d.ScanImage(ctx, imageName)
 	if err != nil || !safe {
 		d.updateStatus(deploy, "FAILED_SECURITY")
 		deploy.Logs += "\nSECURITY ALERT: " + report
