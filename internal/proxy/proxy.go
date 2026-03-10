@@ -69,9 +69,12 @@ func (p *OpsProxy) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 func (p *OpsProxy) GetCertificate(hello *tls.ClientHelloInfo) (*tls.Certificate, error) {
 	var cert models.Certificate
 
+	log.Printf("SSL: Handshake for domain %s", hello.ServerName)
+
 	// 1. Check for Test Override first
 	var override models.CertTestOverride
 	if err := p.DB.Where("domain = ?", hello.ServerName).First(&override).Error; err == nil {
+		log.Printf("SSL: Found test override for domain %s", hello.ServerName)
 		if err := p.DB.First(&cert, override.CertID).Error; err == nil {
 			return p.parseCert(cert)
 		}
@@ -79,9 +82,11 @@ func (p *OpsProxy) GetCertificate(hello *tls.ClientHelloInfo) (*tls.Certificate,
 
 	// 2. Fallback to Global Production Certificate
 	if err := p.DB.Where("is_production = ?", true).First(&cert).Error; err == nil {
+		log.Printf("SSL: Using global production certificate for domain %s", hello.ServerName)
 		return p.parseCert(cert)
 	}
 
+	log.Printf("SSL: No certificate found for domain %s", hello.ServerName)
 	return nil, nil // No certificate found
 }
 
