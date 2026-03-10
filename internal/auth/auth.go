@@ -75,11 +75,12 @@ func VerifyTOTP(passcode string, secret string) bool {
 }
 
 // LogAction records a mutation event to the database
-func LogAction(db *gorm.DB, userID uuid.UUID, action string, target string, ip string) {
+func LogAction(db *gorm.DB, userID uuid.UUID, action string, target string, ip string, payload string) {
 	logEntry := models.AuditLog{
 		UserID:    userID,
 		Action:    action,
 		Target:    target,
+		Payload:   payload,
 		IPAddress: ip,
 		CreatedAt: time.Now(),
 	}
