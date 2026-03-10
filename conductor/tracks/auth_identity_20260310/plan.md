@@ -8,14 +8,14 @@
 - [x] Task: Seed initial roles (Admin, Developer, Viewer) and permissions (6326e23)
 - [x] Task: Conductor - User Manual Verification 'Data Models & Persistence' (Protocol in workflow.md)
 
-## Phase 2: Core Authentication Logic [checkpoint: ]
+## Phase 2: Core Authentication Logic [checkpoint: 5646273]
 **Goal:** Implement JWT generation/validation and TOTP verification.
 
 - [x] Task: Write tests for JWT provider logic (996bb8a)
 - [x] Task: Implement JWT provider in `internal/auth/auth.go` (6caac10)
 - [x] Task: Write tests for TOTP enrollment and verification (cc30881)
 - [x] Task: Implement TOTP logic (using a standard library like `pquerna/otp`) (639ce6a)
-- [ ] Task: Conductor - User Manual Verification 'Core Authentication Logic' (Protocol in workflow.md)
+- [x] Task: Conductor - User Manual Verification 'Core Authentication Logic' (Protocol in workflow.md)
 
 ## Phase 3: Middleware & Security Integration [checkpoint: ]
 **Goal:** Protect routes and enforce RBAC.
