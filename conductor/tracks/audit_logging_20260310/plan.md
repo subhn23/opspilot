@@ -10,7 +10,7 @@
 ## Phase 2: Core Logging Logic [checkpoint: ]
 **Goal:** Implement the `LogAction` function and unit tests.
 
-- [ ] Task: Write tests for `LogAction`
+- [x] Task: Write tests for `LogAction` (82e1122)
 - [ ] Task: Implement `LogAction` in `internal/auth/auth.go` (or a more suitable location)
 - [ ] Task: Conductor - User Manual Verification 'Core Logging Logic' (Protocol in workflow.md)
 
