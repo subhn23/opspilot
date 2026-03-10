@@ -186,3 +186,19 @@ func TestServeHTTP(t *testing.T) {
 		t.Errorf("Expected status 500 for malformed target, got %d", rr.Code)
 	}
 }
+
+func TestHealthCheck(t *testing.T) {
+	db, _ := gorm.Open(sqlite.Open(":memory:"), &gorm.Config{})
+	proxy := NewOpsProxy(db)
+
+	req, _ := http.NewRequest("GET", "/health", nil)
+	rr := httptest.NewRecorder()
+	proxy.ServeHTTP(rr, req)
+
+	if rr.Code != http.StatusOK {
+		t.Errorf("Expected status 200, got %d", rr.Code)
+	}
+	if rr.Body.String() != "OK" {
+		t.Errorf("Expected body 'OK', got '%s'", rr.Body.String())
+	}
+}

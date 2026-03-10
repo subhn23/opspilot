@@ -39,6 +39,13 @@ func (p *OpsProxy) Start(addr string) {
 
 // ServeHTTP handles the actual request proxying
 func (p *OpsProxy) ServeHTTP(w http.ResponseWriter, r *http.Request) {
+	// Basic Health Check
+	if r.URL.Path == "/health" {
+		w.WriteHeader(http.StatusOK)
+		w.Write([]byte("OK"))
+		return
+	}
+
 	var route models.ProxyRoute
 	err := p.DB.Where("domain = ? AND is_active = ?", r.Host, true).First(&route).Error
 	if err != nil {
