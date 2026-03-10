@@ -1,11 +1,11 @@
 # Plan for Track 1.2: OpsProxy & SSL Management
 
-## Phase 1: L7 Routing & Core Proxy [checkpoint: ]
+## Phase 1: L7 Routing & Core Proxy [checkpoint: 5607663]
 **Goal:** Implement and test the basic reverse proxying logic based on database routes.
 
 - [x] Task: Write tests for `ServeHTTP` routing logic (34aea3f)
 - [x] Task: Refactor/Enhance `ServeHTTP` in `internal/proxy/proxy.go` for better error handling (f2bfd55)
-- [ ] Task: Conductor - User Manual Verification 'L7 Routing & Core Proxy' (Protocol in workflow.md)
+- [x] Task: Conductor - User Manual Verification 'L7 Routing & Core Proxy' (Protocol in workflow.md)
 
 ## Phase 2: Dynamic SSL Management [checkpoint: ]
 **Goal:** Implement and test dynamic certificate loading and SNI support.
