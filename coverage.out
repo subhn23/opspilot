@@ -1,0 +1,13 @@
+mode: set
+opspilot/internal/config/db.go:16.48,17.22 1 1
+opspilot/internal/config/db.go:17.22,19.3 1 0
+opspilot/internal/config/db.go:21.2,22.16 2 1
+opspilot/internal/config/db.go:22.16,24.3 1 0
+opspilot/internal/config/db.go:26.2,29.40 3 1
+opspilot/internal/config/db.go:29.40,31.3 1 0
+opspilot/internal/config/db.go:33.2,33.11 1 1
+opspilot/internal/config/db.go:37.36,48.2 7 1
+opspilot/internal/config/db.go:51.37,64.2 2 1
+opspilot/internal/config/db.go:65.42,66.40 1 1
+opspilot/internal/config/db.go:66.40,68.3 1 1
+opspilot/internal/config/db.go:69.2,69.17 1 1
