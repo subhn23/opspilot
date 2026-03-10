@@ -60,3 +60,42 @@ func TestScanImage(t *testing.T) {
 		}
 	})
 }
+
+type MockSSHClient struct {
+	CommandsRun []string
+	MockOutput  string
+	MockErr     error
+}
+
+func (m *MockSSHClient) RunCommand(ctx context.Context, addr, command string) (string, error) {
+	m.CommandsRun = append(m.CommandsRun, command)
+	return m.MockOutput, m.MockErr
+}
+
+func TestRemoteUp(t *testing.T) {
+	db := setupTestDB()
+	ctx := context.Background()
+	mockSSH := &MockSSHClient{MockOutput: "Done"}
+	deployer := &Deployer{DB: db, SSH: mockSSH}
+
+	deploy := &models.Deployment{
+		CommitHash: "abc1234",
+	}
+	db.Create(deploy)
+
+	err := deployer.RemoteUp(ctx, deploy, "10.0.0.50")
+
+	if err != nil {
+		t.Fatalf("RemoteUp failed: %v", err)
+	}
+
+	if len(mockSSH.CommandsRun) != 2 {
+		t.Errorf("Expected 2 commands, ran %d", len(mockSSH.CommandsRun))
+	}
+
+	var updated models.Deployment
+	db.First(&updated, deploy.ID)
+	if updated.Status != "SUCCESS" {
+		t.Errorf("Expected status SUCCESS, got %s", updated.Status)
+	}
+}

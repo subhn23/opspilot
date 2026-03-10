@@ -34,15 +34,33 @@ func (s *RealScanner) Scan(ctx context.Context, imageName string) (bool, string,
 	return true, "No critical or high vulnerabilities found.", nil
 }
 
+// SSHClient abstracts the remote command execution logic
+type SSHClient interface {
+	RunCommand(ctx context.Context, addr, command string) (string, error)
+}
+
+// RealSSHClient uses golang.org/x/crypto/ssh to execute remote commands
+type RealSSHClient struct {
+	User       string
+	PrivateKey string
+}
+
+func (s *RealSSHClient) RunCommand(ctx context.Context, addr, command string) (string, error) {
+	// Placeholder for actual SSH logic using golang.org/x/crypto/ssh
+	return "", fmt.Errorf("SSH execution not yet fully implemented")
+}
+
 type Deployer struct {
 	DB      *gorm.DB
 	Scanner Scanner
+	SSH     SSHClient
 }
 
 func NewDeployer(db *gorm.DB) *Deployer {
 	return &Deployer{
 		DB:      db,
 		Scanner: &RealScanner{},
+		SSH:     &RealSSHClient{User: "root"},
 	}
 }
 
@@ -76,14 +94,26 @@ func (d *Deployer) BuildAndPush(ctx context.Context, deploy *models.Deployment) 
 func (d *Deployer) RemoteUp(ctx context.Context, deploy *models.Deployment, targetIP string) error {
 	d.updateStatus(deploy, "DEPLOYING")
 
-	// Use golang.org/x/crypto/ssh to execute commands
-	// 1. Pull new image
-	// 2. Update docker-compose.yml
-	// 3. docker-compose up -d
+	imageName := fmt.Sprintf("localhost:5000/app:%s", deploy.CommitHash)
+	
+	// Command sequence
+	commands := []string{
+		fmt.Sprintf("docker pull %s", imageName),
+		"docker-compose up -d",
+	}
 
 	log.Printf("Executing remote deploy to %s", targetIP)
 
-	// Mock success for now
+	for _, cmd := range commands {
+		output, err := d.SSH.RunCommand(ctx, targetIP+":22", cmd)
+		deploy.Logs += fmt.Sprintf("\n$ %s\n%s", cmd, output)
+		if err != nil {
+			d.updateStatus(deploy, "FAILED_DEPLOY")
+			d.DB.Save(deploy)
+			return fmt.Errorf("remote command failed: %s: %w", cmd, err)
+		}
+	}
+
 	d.updateStatus(deploy, "SUCCESS")
 	return nil
 }
