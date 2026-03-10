@@ -5,8 +5,6 @@ This file tracks all major tracks for the project. Each track has its own detail
 ---
 
 ## Phase 1: Foundation (Core Control Plane)
-- [x] **Track: 1.3: Audit & Action Logging**
-  *Link: [./tracks/audit_logging_20260310/](./tracks/audit_logging_20260310/)*
 
 ## Phase 2: Dynamic Infrastructure (Terraform & Docker)
 - [ ] **Track: 2.1: Terraform Orchestration Engine**
