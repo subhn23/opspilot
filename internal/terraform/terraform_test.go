@@ -96,11 +96,11 @@ func TestProvision(t *testing.T) {
 	// Verify DB update
 	var updatedEnv models.Environment
 	db.First(&updatedEnv, env.ID)
-	
+
 	if updatedEnv.Status != "HEALTHY" {
 		t.Errorf("Expected status HEALTHY, got %s", updatedEnv.Status)
 	}
-	
+
 	// Need to unmarshal the JSON string value
 	var ip string
 	json.Unmarshal([]byte(`"10.0.0.100"`), &ip)
@@ -122,9 +122,9 @@ func TestDestroy(t *testing.T) {
 	}
 
 	env := &models.Environment{
-		ID:       uuid.New(),
-		Name:     "test-env",
-		Status:   "HEALTHY",
+		ID:     uuid.New(),
+		Name:   "test-env",
+		Status: "HEALTHY",
 	}
 	db.Create(env)
 

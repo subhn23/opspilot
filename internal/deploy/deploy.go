@@ -92,7 +92,7 @@ func (d *Deployer) BuildAndPush(ctx context.Context, deploy *models.Deployment) 
 	d.updateStatus(deploy, "PUSHING")
 	log.Printf("Pushing image %s to registry", imageName)
 	deploy.Logs += fmt.Sprintf("\n$ docker push %s\n(Mocked push success)", imageName)
-	
+
 	d.updateStatus(deploy, "PUSHED")
 	return nil
 }
@@ -102,7 +102,7 @@ func (d *Deployer) RemoteUp(ctx context.Context, deploy *models.Deployment, targ
 	d.updateStatus(deploy, "DEPLOYING")
 
 	imageName := fmt.Sprintf("localhost:5000/app:%s", deploy.CommitHash)
-	
+
 	// Command sequence
 	commands := []string{
 		fmt.Sprintf("docker pull %s", imageName),

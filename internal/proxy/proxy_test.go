@@ -26,18 +26,18 @@ func generateTestCert() (string, string) {
 		Subject: pkix.Name{
 			Organization: []string{"OpsPilot Test"},
 		},
-		NotBefore: time.Now(),
-		NotAfter:  time.Now().Add(time.Hour),
-		KeyUsage:  x509.KeyUsageKeyEncipherment | x509.KeyUsageDigitalSignature,
-		ExtKeyUsage: []x509.ExtKeyUsage{x509.ExtKeyUsageServerAuth},
+		NotBefore:             time.Now(),
+		NotAfter:              time.Now().Add(time.Hour),
+		KeyUsage:              x509.KeyUsageKeyEncipherment | x509.KeyUsageDigitalSignature,
+		ExtKeyUsage:           []x509.ExtKeyUsage{x509.ExtKeyUsageServerAuth},
 		BasicConstraintsValid: true,
 	}
 	derBytes, _ := x509.CreateCertificate(rand.Reader, &template, &template, &priv.PublicKey, priv)
-	
+
 	certPEM := pem.EncodeToMemory(&pem.Block{Type: "CERTIFICATE", Bytes: derBytes})
 	privBytes, _ := x509.MarshalPKCS8PrivateKey(priv)
 	privPEM := pem.EncodeToMemory(&pem.Block{Type: "PRIVATE KEY", Bytes: privBytes})
-	
+
 	return string(certPEM), string(privPEM)
 }
 
@@ -46,7 +46,7 @@ func TestGetCertificate(t *testing.T) {
 	db.AutoMigrate(&models.Certificate{}, &models.CertTestOverride{})
 
 	fullChain, privKey := generateTestCert()
-	
+
 	// 1. Create a Global Production Cert
 	prodCert := models.Certificate{
 		Label:        "Prod Cert",
@@ -77,7 +77,7 @@ func TestGetCertificate(t *testing.T) {
 		IsProduction: false,
 	}
 	db.Create(&testCert)
-	
+
 	db.Create(&models.CertTestOverride{
 		Domain: "test.com",
 		CertID: testCert.ID,
@@ -91,7 +91,7 @@ func TestGetCertificate(t *testing.T) {
 	if cert == nil {
 		t.Fatal("Expected override certificate, got nil")
 	}
-	
+
 	// Check if it's the test cert (simple length check or comparison could work)
 	if len(cert.Certificate[0]) == 0 {
 		t.Error("Returned certificate is empty")
@@ -107,7 +107,7 @@ func TestGetCertificate(t *testing.T) {
 	db.Create(&invalidCert)
 	// We need to remove or deactivate previous prod certs
 	db.Where("label = ?", "Prod Cert").Delete(&models.Certificate{})
-	
+
 	// ServerName that doesn't match the override
 	hello = &tls.ClientHelloInfo{ServerName: "other.com"}
 	cert, err = proxy.GetCertificate(hello)

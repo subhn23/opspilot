@@ -27,11 +27,11 @@ func setupTestDB() *gorm.DB {
 
 func TestScanImage(t *testing.T) {
 	ctx := context.Background()
-	
+
 	t.Run("Safe Image", func(t *testing.T) {
 		mock := &MockScanner{Safe: true, Report: "Clean"}
 		deployer := &Deployer{Scanner: mock}
-		
+
 		safe, report, err := deployer.ScanImage(ctx, "test-image")
 		if err != nil {
 			t.Errorf("Unexpected error: %v", err)
@@ -47,7 +47,7 @@ func TestScanImage(t *testing.T) {
 	t.Run("Unsafe Image", func(t *testing.T) {
 		mock := &MockScanner{Safe: false, Report: "Vulnerability Found"}
 		deployer := &Deployer{Scanner: mock}
-		
+
 		safe, report, err := deployer.ScanImage(ctx, "unsafe-image")
 		if err != nil {
 			t.Errorf("Unexpected error: %v", err)
