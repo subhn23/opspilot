@@ -1,9 +1,13 @@
 package auth
 
 import (
+	"net/http"
+	"net/http/httptest"
+	"os"
 	"testing"
 	"time"
 
+	"github.com/gin-gonic/gin"
 	"github.com/google/uuid"
 	"github.com/pquerna/otp/totp"
 )
@@ -76,5 +80,57 @@ func TestTOTP(t *testing.T) {
 	invalid := VerifyTOTP("000000", secret)
 	if invalid {
 		t.Error("Expected invalid passcode to be rejected")
+	}
+}
+
+func TestAuthMiddleware(t *testing.T) {
+	gin.SetMode(gin.TestMode)
+	secret := "test-secret"
+	userID := uuid.New()
+	roleID := uuid.New()
+
+	// 1. Success Case: Valid Token
+	token, _ := GenerateToken(userID, roleID, secret, 1*time.Hour)
+	w := httptest.NewRecorder()
+	c, r := gin.CreateTestContext(w)
+	
+	// Mock environment for JWT secret
+	os.Setenv("JWT_SECRET", secret)
+	defer os.Unsetenv("JWT_SECRET")
+
+	r.Use(AuthMiddleware())
+	r.GET("/test", func(c *gin.Context) {
+		uid, _ := c.Get("user_id")
+		if uid != userID {
+			t.Errorf("Expected user_id %v in context, got %v", userID, uid)
+		}
+		c.Status(200)
+	})
+
+	c.Request, _ = http.NewRequest("GET", "/test", nil)
+	c.Request.Header.Set("Authorization", "Bearer "+token)
+	r.ServeHTTP(w, c.Request)
+
+	if w.Code != 200 {
+		t.Errorf("Expected status 200, got %d", w.Code)
+	}
+
+	// 2. Failure Case: Missing Token
+	w = httptest.NewRecorder()
+	c.Request, _ = http.NewRequest("GET", "/test", nil)
+	r.ServeHTTP(w, c.Request)
+
+	if w.Code != 401 {
+		t.Errorf("Expected status 401 for missing token, got %d", w.Code)
+	}
+
+	// 3. Failure Case: Invalid Token
+	w = httptest.NewRecorder()
+	c.Request, _ = http.NewRequest("GET", "/test", nil)
+	c.Request.Header.Set("Authorization", "Bearer invalid-token")
+	r.ServeHTTP(w, c.Request)
+
+	if w.Code != 401 {
+		t.Errorf("Expected status 401 for invalid token, got %d", w.Code)
 	}
 }
