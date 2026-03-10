@@ -1,0 +1,24 @@
+# Binaries
+opspilot
+*.exe
+bin/
+
+# Dependency directories
+node_modules/
+
+# Static output
+ui/static/css/output.css
+
+# OS / Editor
+.DS_Store
+.vscode/
+.idea/
+*.swp
+
+# Terraform
+.terraform/
+*.tfstate
+*.tfstate.backup
+
+# Env files
+.env

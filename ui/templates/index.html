@@ -1,0 +1,140 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{{ .Title }} | OpsPilot</title>
+    <link href="/static/css/output.css" rel="stylesheet">
+    <script src="https://unpkg.com/htmx.org@1.9.10"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/cytoscape/3.28.1/cytoscape.min.js"></script>
+    <script defer src="https://unpkg.com/alpinejs@3.x.x/dist/cdn.min.js"></script>
+</head>
+<body class="bg-slate-50 font-sans text-slate-900" x-data="{ sidebarOpen: false }">
+    <div class="flex h-screen overflow-hidden">
+        
+        <!-- Mobile Sidebar Overlay -->
+        <div x-show="sidebarOpen" @click="sidebarOpen = false" class="fixed inset-0 z-20 bg-black bg-opacity-50 lg:hidden"></div>
+
+        <!-- Sidebar -->
+        <aside :class="sidebarOpen ? 'translate-x-0' : '-translate-x-full'" class="fixed inset-y-0 left-0 z-30 w-64 bg-slate-900 text-white transition-transform duration-300 transform lg:translate-x-0 lg:static lg:inset-0">
+            <div class="flex items-center justify-center h-16 bg-indigo-600">
+                <span class="text-xl font-bold uppercase tracking-wider">OpsPilot</span>
+            </div>
+            <nav class="mt-4 px-4 space-y-2">
+                <a href="/" class="flex items-center p-3 rounded-lg bg-indigo-500 bg-opacity-25 border-l-4 border-indigo-500">
+                    <span class="ml-3">Dashboard</span>
+                </a>
+                <a href="#" class="flex items-center p-3 rounded-lg hover:bg-slate-800 transition-colors">
+                    <span class="ml-3">Infrastructure Map</span>
+                </a>
+                <a href="#" class="flex items-center p-3 rounded-lg hover:bg-slate-800 transition-colors">
+                    <span class="ml-3">Deployments</span>
+                </a>
+                <a href="#" class="flex items-center p-3 rounded-lg hover:bg-slate-800 transition-colors">
+                    <span class="ml-3">Reverse Proxy</span>
+                </a>
+                <a href="#" class="flex items-center p-3 rounded-lg hover:bg-slate-800 transition-colors">
+                    <span class="ml-3">Identity & RBAC</span>
+                </a>
+            </nav>
+        </aside>
+
+        <!-- Main Content -->
+        <div class="flex-1 flex flex-col overflow-hidden">
+            
+            <!-- Top Header -->
+            <header class="h-16 bg-white border-b border-slate-200 flex items-center justify-between px-4 lg:px-8">
+                <button @click="sidebarOpen = true" class="p-2 rounded-md lg:hidden text-slate-600 hover:bg-slate-100">
+                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16m-7 6h7"></path></svg>
+                </button>
+                <div class="flex items-center space-x-4">
+                    <div class="text-sm font-medium text-slate-500 uppercase tracking-tight">Environment: <span class="text-indigo-600 font-bold">Production</span></div>
+                    <div class="h-8 w-8 rounded-full bg-indigo-100 flex items-center justify-center text-indigo-700 font-bold">A</div>
+                </div>
+            </header>
+
+            <!-- Dashboard Body -->
+            <main class="flex-1 overflow-y-auto p-4 lg:p-8">
+                
+                <!-- Quick Stats Grid -->
+                <div class="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-6 mb-8">
+                    <div class="bg-white p-6 rounded-xl shadow-sm border border-slate-200">
+                        <h3 class="text-slate-500 text-sm font-medium uppercase">Active VMs</h3>
+                        <p class="text-3xl font-bold mt-1 text-slate-800">{{ .EnvsCount }}</p>
+                    </div>
+                    <div class="bg-white p-6 rounded-xl shadow-sm border border-slate-200">
+                        <h3 class="text-slate-500 text-sm font-medium uppercase">Total Routes</h3>
+                        <p class="text-3xl font-bold mt-1 text-slate-800">12</p>
+                    </div>
+                    <div class="bg-white p-6 rounded-xl shadow-sm border border-slate-200">
+                        <h3 class="text-slate-500 text-sm font-medium uppercase">Health Score</h3>
+                        <p class="text-3xl font-bold mt-1 text-green-600">98%</p>
+                    </div>
+                    <div class="bg-white p-6 rounded-xl shadow-sm border border-slate-200">
+                        <h3 class="text-slate-500 text-sm font-medium uppercase">Last Deploy</h3>
+                        <p class="text-sm font-medium mt-2 text-slate-600">24 mins ago</p>
+                    </div>
+                </div>
+
+                <!-- Network Visualization Section -->
+                <div class="bg-white rounded-xl shadow-sm border border-slate-200 mb-8 overflow-hidden">
+                    <div class="px-6 py-4 border-b border-slate-100 flex justify-between items-center">
+                        <h2 class="text-lg font-bold text-slate-800">Live Network Topology</h2>
+                        <button hx-get="/api/topology" hx-target="#topology-status" class="text-sm text-indigo-600 font-medium hover:underline">Refresh Map</button>
+                    </div>
+                    <div id="cy" class="h-[400px] w-full bg-slate-50"></div>
+                    <div id="topology-status" class="hidden"></div>
+                </div>
+
+                <!-- Live Metrics Table -->
+                <div class="bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden">
+                    <table class="w-full text-left border-collapse">
+                        <thead class="bg-slate-50 text-slate-500 uppercase text-xs font-bold">
+                            <tr>
+                                <th class="px-6 py-3">Service</th>
+                                <th class="px-6 py-3">Status</th>
+                                <th class="px-6 py-3">CPU Usage</th>
+                                <th class="px-6 py-3">Memory</th>
+                                <th class="px-6 py-3">Uptime</th>
+                            </tr>
+                        </thead>
+                        <tbody class="divide-y divide-slate-100 text-sm" id="metrics-body">
+                            <tr class="hover:bg-slate-50 transition-colors">
+                                <td class="px-6 py-4 font-semibold">auth-service</td>
+                                <td class="px-6 py-4"><span class="px-2 py-1 bg-green-100 text-green-700 rounded-full text-xs font-bold">HEALTHY</span></td>
+                                <td class="px-6 py-4 text-slate-600">1.2%</td>
+                                <td class="px-6 py-4 text-slate-600">128MB</td>
+                                <td class="px-6 py-4 text-slate-600">4d 12h</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+
+            </main>
+        </div>
+    </div>
+
+    <!-- Cytoscape Initialization -->
+    <script>
+        document.addEventListener('DOMContentLoaded', function(){
+            var cy = cytoscape({
+                container: document.getElementById('cy'),
+                elements: [
+                    { data: { id: 'fw', label: 'Firewall' } },
+                    { data: { id: 'vip', label: 'VIP' } },
+                    { data: { id: 'proxy', label: 'OpsProxy' } },
+                    { data: { id: 'vm1', label: 'App-Prod' } },
+                    { data: { source: 'fw', target: 'vip' } },
+                    { data: { source: 'vip', target: 'proxy' } },
+                    { data: { source: 'proxy', target: 'vm1' } }
+                ],
+                style: [
+                    { selector: 'node', style: { 'label': 'data(label)', 'background-color': '#4f46e5', 'color': '#1e293b', 'font-size': '12px' } },
+                    { selector: 'edge', style: { 'width': 2, 'line-color': '#cbd5e1', 'target-arrow-color': '#cbd5e1', 'target-arrow-shape': 'triangle', 'curve-style': 'bezier' } }
+                ],
+                layout: { name: 'grid', rows: 1 }
+            });
+        });
+    </script>
+</body>
+</html>

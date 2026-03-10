@@ -1,0 +1,12 @@
+{
+  "name": "opspilot-ui",
+  "version": "1.0.0",
+  "description": "Tailwind build setup for OpsPilot",
+  "scripts": {
+    "build:css": "tailwindcss -i ./ui/static/css/input.css -o ./ui/static/css/output.css --minify",
+    "watch:css": "tailwindcss -i ./ui/static/css/input.css -o ./ui/static/css/output.css --watch"
+  },
+  "dependencies": {
+    "tailwindcss": "^3.4.1"
+  }
+}
