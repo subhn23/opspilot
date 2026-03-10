@@ -53,7 +53,7 @@ func (m *DNSManager) UpdateRecordA(ctx context.Context, hostname string, ip stri
 	log.Printf("DNS: Updating %s.%s -> %s on %s", hostname, m.ZoneName, ip, m.ServerAddr)
 
 	// PowerShell command to add/update record
-	psCommand := fmt.Sprintf("Add-DnsServerResourceRecordA -Name '%s' -ZoneName '%s' -IPv4Address '%s' -AllowUpdateAny", 
+	psCommand := fmt.Sprintf("Add-DnsServerResourceRecordA -Name '%s' -ZoneName '%s' -IPv4Address '%s' -AllowUpdateAny",
 		hostname, m.ZoneName, ip)
 
 	output, err := m.SSH.RunCommand(ctx, m.ServerAddr, psCommand)
