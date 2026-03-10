@@ -4,7 +4,7 @@
 **Goal:** Implement the logic to build the graph data from the database.
 
 - [x] Task: Define Node and Edge models in `internal/models/models.go` (if not already present) (bca49f4)
-- [ ] Task: Implement `BuildTopology` logic in `internal/visualizer/visualizer.go`
+- [x] Task: Implement `BuildTopology` logic in `internal/visualizer/visualizer.go` (7699322)
 - [ ] Task: Write tests for `BuildTopology` with various DB states
 - [ ] Task: Conductor - User Manual Verification 'Topology Engine' (Protocol in workflow.md)
 
