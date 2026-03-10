@@ -1,12 +1,12 @@
 # Plan for Track 2.2: OpsDeploy Engine
 
-## Phase 1: Security Scanning (Trivy Integration) [checkpoint: ]
+## Phase 1: Security Scanning (Trivy Integration) [checkpoint: 0dfb7d1]
 **Goal:** Implement the `ScanImage` logic and verification.
 
 - [x] Task: Define `Scanner` interface for `Trivy` integration (Already defined)
 - [x] Task: Implement `ScanImage` using `exec.Command` (61c3608)
 - [x] Task: Write tests for `ScanImage` with a mock scanner (61c3608)
-- [ ] Task: Conductor - User Manual Verification 'Security Scanning' (Protocol in workflow.md)
+- [x] Task: Conductor - User Manual Verification 'Security Scanning' (Protocol in workflow.md)
 
 ## Phase 2: Remote Deployment (SSH) [checkpoint: ]
 **Goal:** Implement the `RemoteUp` logic using SSH.
