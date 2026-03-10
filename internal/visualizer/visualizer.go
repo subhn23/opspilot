@@ -56,7 +56,7 @@ func (v *OpsVisualizer) BuildTopology() ([]models.Node, []models.Edge) {
 				Status:   "Green",
 				Metadata: map[string]string{"hash": latestDeploy.CommitHash, "branch": latestDeploy.Branch},
 			})
-			edges = append(models.Edge{Source: env.ID.String(), Target: nodeID, Label: "Docker"})
+			edges = append(edges, models.Edge{Source: env.ID.String(), Target: nodeID, Label: "Docker"})
 		}
 	}
 
