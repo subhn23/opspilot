@@ -16,9 +16,9 @@
 - [x] Task: Write tests for `RemoteUp` using a mock SSH client (22bee6c)
 - [x] Task: Conductor - User Manual Verification 'Remote Deployment' (Protocol in workflow.md)
 
-## Phase 3: Engine Orchestration [checkpoint: ]
+## Phase 3: Engine Orchestration [checkpoint: a0e5410]
 **Goal:** Connect all pieces in `BuildAndPush` and `Deploy` flows.
 
 - [x] Task: Implement `BuildAndPush` transitions and logging (bdf3d68)
 - [x] Task: Add deployment logging to the `AuditLog` (2dd101a)
-- [ ] Task: Conductor - User Manual Verification 'Engine Orchestration' (Protocol in workflow.md)
+- [x] Task: Conductor - User Manual Verification 'Engine Orchestration' (Protocol in workflow.md)
