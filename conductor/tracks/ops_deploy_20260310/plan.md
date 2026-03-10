@@ -19,6 +19,6 @@
 ## Phase 3: Engine Orchestration [checkpoint: ]
 **Goal:** Connect all pieces in `BuildAndPush` and `Deploy` flows.
 
-- [ ] Task: Implement `BuildAndPush` transitions and logging
+- [x] Task: Implement `BuildAndPush` transitions and logging (bdf3d68)
 - [ ] Task: Add deployment logging to the `AuditLog`
 - [ ] Task: Conductor - User Manual Verification 'Engine Orchestration' (Protocol in workflow.md)
