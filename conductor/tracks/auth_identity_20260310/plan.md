@@ -21,7 +21,7 @@
 **Goal:** Protect routes and enforce RBAC.
 
 - [x] Task: Write tests for `AuthMiddleware` (81d93b9)
-- [ ] Task: Implement `AuthMiddleware` in `internal/auth/auth.go`
+- [x] Task: Implement `AuthMiddleware` in `internal/auth/auth.go` (6ca60eb)
 - [ ] Task: Write tests for `RequirePermission` RBAC middleware
 - [ ] Task: Implement `RequirePermission` middleware
 - [ ] Task: Conductor - User Manual Verification 'Middleware & Security Integration' (Protocol in workflow.md)
