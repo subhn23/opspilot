@@ -2,10 +2,21 @@ package visualizer
 
 import (
 	"fmt"
+	"log"
+	"net/http"
 	"opspilot/internal/models"
+	"time"
 
+	"github.com/gin-gonic/gin"
+	"github.com/gorilla/websocket"
 	"gorm.io/gorm"
 )
+
+var upgrader = websocket.Upgrader{
+	CheckOrigin: func(r *http.Request) bool {
+		return true // For dev, allow all origins
+	},
+}
 
 type OpsVisualizer struct {
 	DB *gorm.DB
@@ -13,6 +24,42 @@ type OpsVisualizer struct {
 
 func NewOpsVisualizer(db *gorm.DB) *OpsVisualizer {
 	return &OpsVisualizer{DB: db}
+}
+
+// StreamTopologyUpdates handles WebSocket connections and streams graph data
+func (v *OpsVisualizer) StreamTopologyUpdates(c *gin.Context) {
+	conn, err := upgrader.Upgrade(c.Writer, c.Request, nil)
+	if err != nil {
+		log.Printf("WebSocket Upgrade Failed: %v", err)
+		return
+	}
+	defer conn.Close()
+
+	log.Printf("Visualizer: Client connected from %s", c.ClientIP())
+
+	// Initial Push
+	nodes, edges := v.BuildTopology()
+	if err := conn.WriteJSON(gin.H{"nodes": nodes, "edges": edges}); err != nil {
+		return
+	}
+
+	// Simple Polling Loop for now (Phase 3 will make it event-driven)
+	ticker := time.NewTicker(10 * time.Second)
+	defer ticker.Stop()
+
+	for {
+		select {
+		case <-ticker.C:
+			nodes, edges := v.BuildTopology()
+			if err := conn.WriteJSON(gin.H{"nodes": nodes, "edges": edges}); err != nil {
+				log.Printf("WebSocket Write Error: %v", err)
+				return
+			}
+		case <-c.Request.Context().Done():
+			log.Println("Visualizer: Client disconnected")
+			return
+		}
+	}
 }
 
 // BuildTopology scans the DB and returns the Graph structure
