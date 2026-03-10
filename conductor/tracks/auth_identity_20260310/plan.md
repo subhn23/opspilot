@@ -12,7 +12,7 @@
 **Goal:** Implement JWT generation/validation and TOTP verification.
 
 - [x] Task: Write tests for JWT provider logic (996bb8a)
-- [ ] Task: Implement JWT provider in `internal/auth/auth.go`
+- [x] Task: Implement JWT provider in `internal/auth/auth.go` (6caac10)
 - [ ] Task: Write tests for TOTP enrollment and verification
 - [ ] Task: Implement TOTP logic (using a standard library like `pquerna/otp`)
 - [ ] Task: Conductor - User Manual Verification 'Core Authentication Logic' (Protocol in workflow.md)
