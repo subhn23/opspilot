@@ -5,7 +5,8 @@ This file tracks all major tracks for the project. Each track has its own detail
 ---
 
 ## Phase 1: Foundation (Core Control Plane)
-- [ ] **Track: 1.2: OpsProxy & SSL Management**
+- [~] **Track: 1.2: OpsProxy & SSL Management**
+  *Link: [./tracks/opsproxy_ssl_20260310/](./tracks/opsproxy_ssl_20260310/)*
 - [ ] **Track: 1.3: Audit & Action Logging**
 
 ## Phase 2: Dynamic Infrastructure (Terraform & Docker)
