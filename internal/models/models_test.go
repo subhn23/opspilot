@@ -45,6 +45,17 @@ func TestRoleBeforeCreate(t *testing.T) {
 	}
 }
 
+func TestEnvironmentBeforeCreate(t *testing.T) {
+	e := Environment{}
+	err := e.BeforeCreate(nil)
+	if err != nil {
+		t.Errorf("BeforeCreate failed: %v", err)
+	}
+	if e.ID == uuid.Nil {
+		t.Error("Environment ID was not generated")
+	}
+}
+
 func TestSeedSystemData(t *testing.T) {
 	db, err := gorm.Open(sqlite.Open(":memory:"), &gorm.Config{})
 	if err != nil {

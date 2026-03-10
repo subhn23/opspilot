@@ -110,3 +110,8 @@ func (r *Role) BeforeCreate(tx *gorm.DB) (err error) {
 	r.ID = uuid.New()
 	return
 }
+
+func (e *Environment) BeforeCreate(tx *gorm.DB) (err error) {
+	e.ID = uuid.New()
+	return
+}
