@@ -11,7 +11,7 @@
 ## Phase 2: WebSocket Streaming [checkpoint: ]
 **Goal:** Stream topology updates to the frontend.
 
-- [ ] Task: Implement WebSocket handler in `internal/visualizer/visualizer.go`
+- [x] Task: Implement WebSocket handler in `internal/visualizer/visualizer.go` (1cbc952)
 - [ ] Task: Integrate WebSocket handler with Gin router
 - [ ] Task: Write tests for WebSocket connection management
 - [ ] Task: Conductor - User Manual Verification 'WebSocket Streaming' (Protocol in workflow.md)
