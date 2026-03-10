@@ -15,10 +15,10 @@
 - [x] Task: Write tests for `Destroy` using a mock `TerraformClient` (b2b0ade)
 - [x] Task: Conductor - User Manual Verification 'TFEngine Core & Testing Strategy' (Protocol in workflow.md)
 
-## Phase 3: Terraform Execution Integration [checkpoint: ]
+## Phase 3: Terraform Execution Integration [checkpoint: 04cea28]
 **Goal:** Implement the concrete `terraform-exec` calls within the engine.
 
 - [x] Task: Implement `Provision` using `tfexec` calls in `internal/terraform/terraform.go` (b2b0ade)
 - [x] Task: Implement `Destroy` using `tfexec` calls (b2b0ade)
 - [x] Task: Implement `setupTF` workspace preparation logic (b2b0ade)
-- [ ] Task: Conductor - User Manual Verification 'Terraform Execution Integration' (Protocol in workflow.md)
+- [x] Task: Conductor - User Manual Verification 'Terraform Execution Integration' (Protocol in workflow.md)
