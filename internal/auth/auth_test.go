@@ -5,6 +5,7 @@ import (
 	"time"
 
 	"github.com/google/uuid"
+	"github.com/pquerna/otp/totp"
 )
 
 func TestJWTProvider(t *testing.T) {
@@ -45,5 +46,35 @@ func TestJWTProvider(t *testing.T) {
 	_, err = ValidateToken(token, secret)
 	if err == nil {
 		t.Error("Expected error for expired token, got nil")
+	}
+}
+
+func TestTOTP(t *testing.T) {
+	email := "test@example.com"
+
+	// 1. Generate Secret
+	secret, err := GenerateTOTPSecret(email)
+	if err != nil {
+		t.Fatalf("Failed to generate TOTP secret: %v", err)
+	}
+	if secret == "" {
+		t.Fatal("Generated TOTP secret is empty")
+	}
+
+	// 2. Verify Valid Passcode
+	passcode, err := totp.GenerateCode(secret, time.Now())
+	if err != nil {
+		t.Fatalf("Failed to generate passcode: %v", err)
+	}
+
+	valid := VerifyTOTP(passcode, secret)
+	if !valid {
+		t.Errorf("Expected passcode %s to be valid for secret %s", passcode, secret)
+	}
+
+	// 3. Verify Invalid Passcode
+	invalid := VerifyTOTP("000000", secret)
+	if invalid {
+		t.Error("Expected invalid passcode to be rejected")
 	}
 }
