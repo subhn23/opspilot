@@ -20,5 +20,5 @@
 **Goal:** Connect all pieces in `BuildAndPush` and `Deploy` flows.
 
 - [x] Task: Implement `BuildAndPush` transitions and logging (bdf3d68)
-- [ ] Task: Add deployment logging to the `AuditLog`
+- [x] Task: Add deployment logging to the `AuditLog` (2dd101a)
 - [ ] Task: Conductor - User Manual Verification 'Engine Orchestration' (Protocol in workflow.md)
