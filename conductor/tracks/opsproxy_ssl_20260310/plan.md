@@ -17,6 +17,6 @@
 ## Phase 3: Integration & Resilience [checkpoint: ]
 **Goal:** Ensure the proxy is robust and integrates well with the rest of the system.
 
-- [ ] Task: Add logging and basic health check support to `OpsProxy`
+- [x] Task: Add logging and basic health check support to `OpsProxy` (0ed1357)
 - [ ] Task: Verify hot-reloading by updating DB routes/certs during operation
 - [ ] Task: Conductor - User Manual Verification 'Integration & Resilience' (Protocol in workflow.md)
