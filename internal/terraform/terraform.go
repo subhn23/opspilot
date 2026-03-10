@@ -2,6 +2,7 @@ package terraform
 
 import (
 	"context"
+	"encoding/json"
 	"fmt"
 	"log"
 	"opspilot/internal/models"
@@ -12,10 +13,27 @@ import (
 	"gorm.io/gorm"
 )
 
+// TerraformClient abstracts the necessary tfexec methods for mocking
+type TerraformClient interface {
+	Apply(ctx context.Context, opts ...tfexec.ApplyOption) error
+	Destroy(ctx context.Context, opts ...tfexec.DestroyOption) error
+	Init(ctx context.Context, opts ...tfexec.InitOption) error
+	Output(ctx context.Context, opts ...tfexec.OutputOption) (map[string]tfexec.OutputMeta, error)
+}
+
+// TFClientFactory defines a function type for creating TerraformClients
+type TFClientFactory func(workingDir, execPath string) (TerraformClient, error)
+
 type TFEngine struct {
-	DB         *gorm.DB
-	WorkingDir string
-	ExecPath   string // Path to terraform binary
+	DB            *gorm.DB
+	WorkingDir    string
+	ExecPath      string // Path to terraform binary
+	ClientFactory TFClientFactory
+}
+
+// defaultClientFactory is the real implementation using tfexec
+func defaultClientFactory(workingDir, execPath string) (TerraformClient, error) {
+	return tfexec.NewTerraform(workingDir, execPath)
 }
 
 func NewTFEngine(db *gorm.DB, workingDir string) (*TFEngine, error) {
@@ -27,9 +45,10 @@ func NewTFEngine(db *gorm.DB, workingDir string) (*TFEngine, error) {
 	}
 
 	return &TFEngine{
-		DB:         db,
-		WorkingDir: workingDir,
-		ExecPath:   execPath,
+		DB:            db,
+		WorkingDir:    workingDir,
+		ExecPath:      execPath,
+		ClientFactory: defaultClientFactory,
 	}, nil
 }
 
@@ -62,8 +81,14 @@ func (t *TFEngine) Provision(ctx context.Context, env *models.Environment) error
 	// Capture output (IP Address)
 	outputs, err := tf.Output(ctx)
 	if err == nil {
-		if ip, ok := outputs["vm_ip"]; ok {
-			env.IPAddress = string(ip.Value)
+		if ipMeta, ok := outputs["vm_ip"]; ok {
+			var ip string
+			if err := json.Unmarshal(ipMeta.Value, &ip); err == nil {
+				env.IPAddress = ip
+			} else {
+				// Fallback to string if unmarshal fails (e.g. if it wasn't a JSON string)
+				env.IPAddress = string(ipMeta.Value)
+			}
 		}
 	}
 
@@ -88,14 +113,14 @@ func (t *TFEngine) Destroy(ctx context.Context, env *models.Environment) error {
 	return nil
 }
 
-func (t *TFEngine) setupTF(ctx context.Context, workspace string) (*tfexec.Terraform, error) {
+func (t *TFEngine) setupTF(ctx context.Context, workspace string) (TerraformClient, error) {
 	wsDir := filepath.Join(t.WorkingDir, workspace)
 	if _, err := os.Stat(wsDir); os.IsNotExist(err) {
 		os.MkdirAll(wsDir, 0755)
 		// Here we would copy the base .tf templates to the workspace directory
 	}
 
-	tf, err := tfexec.NewTerraform(wsDir, t.ExecPath)
+	tf, err := t.ClientFactory(wsDir, t.ExecPath)
 	if err != nil {
 		return nil, err
 	}
