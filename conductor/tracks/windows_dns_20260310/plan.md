@@ -8,13 +8,13 @@
 - [x] Task: Write tests for `UpdateDNS` with a mock SSH client (3300974)
 - [x] Task: Conductor - User Manual Verification 'DNS Update Engine' (Protocol in workflow.md)
 
-## Phase 2: Verification & Verification [checkpoint: ]
+## Phase 2: Verification ## Phase 2: Verification & Verification [checkpoint: ] Verification [checkpoint: b5318e7]
 **Goal:** Implement DNS lookup verification and manual fallback.
 
 - [x] Task: Implement `VerifyDNS` using `net.LookupIP` (d9fe993)
 - [x] Task: Implement `RequestManualDNS` blocking logic (mocked UI trigger) (d9fe993)
 - [x] Task: Write tests for `VerifyDNS` (d9fe993)
-- [ ] Task: Conductor - User Manual Verification 'Verification & Fallback' (Protocol in workflow.md)
+- [x] Task: Conductor - User Manual Verification 'Verification - [ ] Task: Conductor - User Manual Verification 'Verification & Fallback' (Protocol in workflow.md) Fallback' (Protocol in workflow.md)
 
 ## Phase 3: Integration & Logging [checkpoint: ]
 **Goal:** Connect to the audit log and finalize integration.
