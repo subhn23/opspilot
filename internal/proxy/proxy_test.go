@@ -202,3 +202,40 @@ func TestHealthCheck(t *testing.T) {
 		t.Errorf("Expected body 'OK', got '%s'", rr.Body.String())
 	}
 }
+
+func TestHotReloading(t *testing.T) {
+	db, _ := gorm.Open(sqlite.Open(":memory:"), &gorm.Config{})
+	db.AutoMigrate(&models.ProxyRoute{}, &models.Certificate{}, &models.CertTestOverride{})
+	proxy := NewOpsProxy(db)
+
+	// 1. Initial State: No route
+	req, _ := http.NewRequest("GET", "http://hotload.com", nil)
+	rr := httptest.NewRecorder()
+	proxy.ServeHTTP(rr, req)
+	if rr.Code != 404 {
+		t.Errorf("Initial request should be 404, got %d", rr.Code)
+	}
+
+	// 2. Add Route dynamically
+	backend := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		w.WriteHeader(http.StatusOK)
+	}))
+	defer backend.Close()
+
+	db.Create(&models.ProxyRoute{Domain: "hotload.com", TargetURL: backend.URL, IsActive: true})
+
+	// 3. Request again: Should be 200
+	rr = httptest.NewRecorder()
+	proxy.ServeHTTP(rr, req)
+	if rr.Code != 200 {
+		t.Errorf("Request after DB update should be 200, got %d", rr.Code)
+	}
+
+	// 4. Update Route: Disable it
+	db.Model(&models.ProxyRoute{}).Where("domain = ?", "hotload.com").Update("is_active", false)
+	rr = httptest.NewRecorder()
+	proxy.ServeHTTP(rr, req)
+	if rr.Code != 404 {
+		t.Errorf("Request after disabling route should be 404, got %d", rr.Code)
+	}
+}
