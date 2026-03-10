@@ -71,7 +71,7 @@ func TestRequirePermission(t *testing.T) {
 
 			r.Use(func(c *gin.Context) {
 				if tt.user.RoleID != uuid.Nil {
-					c.Set("user", tt.user)
+					c.Set("role_id", tt.user.RoleID)
 				}
 				c.Next()
 			})
