@@ -14,7 +14,7 @@
 - [x] Task: Write tests for JWT provider logic (996bb8a)
 - [x] Task: Implement JWT provider in `internal/auth/auth.go` (6caac10)
 - [x] Task: Write tests for TOTP enrollment and verification (cc30881)
-- [ ] Task: Implement TOTP logic (using a standard library like `pquerna/otp`)
+- [x] Task: Implement TOTP logic (using a standard library like `pquerna/otp`) (639ce6a)
 - [ ] Task: Conductor - User Manual Verification 'Core Authentication Logic' (Protocol in workflow.md)
 
 ## Phase 3: Middleware & Security Integration [checkpoint: ]
