@@ -1,12 +1,12 @@
 # Plan for Track 2.3: Windows DNS Integration
 
-## Phase 1: DNS Update Engine [checkpoint: ]
+## Phase 1: DNS Update Engine [checkpoint: 3787ff3]
 **Goal:** Implement the SSH-based PowerShell update logic.
 
 - [x] Task: Define `DNSManager` struct and `SSHClient` dependency in `internal/dns/dns.go` ( Already complete)
 - [x] Task: Implement `UpdateDNS` logic using PowerShell command generation (3300974)
 - [x] Task: Write tests for `UpdateDNS` with a mock SSH client (3300974)
-- [ ] Task: Conductor - User Manual Verification 'DNS Update Engine' (Protocol in workflow.md)
+- [x] Task: Conductor - User Manual Verification 'DNS Update Engine' (Protocol in workflow.md)
 
 ## Phase 2: Verification & Verification [checkpoint: ]
 **Goal:** Implement DNS lookup verification and manual fallback.
