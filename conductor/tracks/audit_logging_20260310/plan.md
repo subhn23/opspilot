@@ -7,12 +7,12 @@
 - [x] Task: Implement/Verify GORM migration for `AuditLog` (24bb379)
 - [x] Task: Conductor - User Manual Verification 'Data Model - [ ] Task: Conductor - User Manual Verification 'Data Model & Persistence' (Protocol in workflow.md) Persistence' (Protocol in workflow.md)
 
-## Phase 2: Core Logging Logic [checkpoint: ]
+## Phase 2: Core Logging Logic [checkpoint: f0055ee]
 **Goal:** Implement the `LogAction` function and unit tests.
 
 - [x] Task: Write tests for `LogAction` (82e1122)
 - [x] Task: Implement `LogAction` in `internal/auth/auth.go` (or a more suitable location) (bd992c4)
-- [ ] Task: Conductor - User Manual Verification 'Core Logging Logic' (Protocol in workflow.md)
+- [x] Task: Conductor - User Manual Verification 'Core Logging Logic' (Protocol in workflow.md)
 
 ## Phase 3: System-wide Integration [checkpoint: ]
 **Goal:** Integrate logging into existing modules.
