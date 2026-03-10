@@ -5,7 +5,11 @@ import (
 	"fmt"
 	"log"
 	"net"
+	"opspilot/internal/auth"
 	"time"
+
+	"github.com/google/uuid"
+	"gorm.io/gorm"
 )
 
 // SSHClient abstracts remote command execution
@@ -26,6 +30,7 @@ func (r *DefaultResolver) LookupIP(ctx context.Context, network, host string) ([
 }
 
 type DNSManager struct {
+	DB         *gorm.DB
 	ServerAddr string
 	ZoneName   string
 	SSH        SSHClient
@@ -33,8 +38,9 @@ type DNSManager struct {
 }
 
 // NewDNSManager creates a new DNSManager
-func NewDNSManager(serverAddr, zoneName string, ssh SSHClient) *DNSManager {
+func NewDNSManager(db *gorm.DB, serverAddr, zoneName string, ssh SSHClient) *DNSManager {
 	return &DNSManager{
+		DB:         db,
 		ServerAddr: serverAddr,
 		ZoneName:   zoneName,
 		SSH:        ssh,
@@ -47,16 +53,16 @@ func (m *DNSManager) UpdateRecordA(ctx context.Context, hostname string, ip stri
 	log.Printf("DNS: Updating %s.%s -> %s on %s", hostname, m.ZoneName, ip, m.ServerAddr)
 
 	// PowerShell command to add/update record
-	// We use -AllowUpdateAny to handle existing records if needed, or check existence first.
-	// For simplicity, we'll try to add it.
 	psCommand := fmt.Sprintf("Add-DnsServerResourceRecordA -Name '%s' -ZoneName '%s' -IPv4Address '%s' -AllowUpdateAny", 
 		hostname, m.ZoneName, ip)
 
 	output, err := m.SSH.RunCommand(ctx, m.ServerAddr, psCommand)
 	if err != nil {
+		auth.LogAction(m.DB, uuid.Nil, "DNS_UPDATE_FAILURE", hostname, m.ServerAddr, fmt.Sprintf("Error: %v, Output: %s", err, output))
 		return fmt.Errorf("failed to update DNS record via SSH: %w (Output: %s)", err, output)
 	}
 
+	auth.LogAction(m.DB, uuid.Nil, "DNS_UPDATE_SUCCESS", hostname, m.ServerAddr, "DNS record updated successfully via PowerShell")
 	log.Printf("DNS: Successfully updated record for %s", hostname)
 	return nil
 }
@@ -71,10 +77,12 @@ func (m *DNSManager) VerifyDNS(ctx context.Context, hostname string, expectedIP 
 
 	for _, ip := range ips {
 		if ip.String() == expectedIP {
+			auth.LogAction(m.DB, uuid.Nil, "DNS_VERIFY_SUCCESS", hostname, fqdn, "DNS record verified")
 			return true, nil
 		}
 	}
 
+	auth.LogAction(m.DB, uuid.Nil, "DNS_VERIFY_FAILURE", hostname, fqdn, "DNS record mismatch")
 	return false, nil
 }
 
