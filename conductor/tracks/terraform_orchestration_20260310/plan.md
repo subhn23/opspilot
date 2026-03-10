@@ -7,13 +7,13 @@
 - [x] Task: Ensure `AutoMigrate` includes the `Environment` model (N/A - Already included)
 - [x] Task: Conductor - User Manual Verification 'Environment Models - [ ] Task: Conductor - User Manual Verification 'Environment Models & Setup' (Protocol in workflow.md) Setup' (Protocol in workflow.md)
 
-## Phase 2: TFEngine Core & Testing Strategy [checkpoint: ]
+## Phase 2: TFEngine Core & Testing Strategy [checkpoint: 8002c99]
 **Goal:** Build the `TFEngine` structure and establish a testable interface.
 
 - [x] Task: Define a `TerraformClient` interface to wrap `tfexec` methods for mocking (b2b0ade)
 - [x] Task: Write tests for `Provision` using a mock `TerraformClient` (b2b0ade)
 - [x] Task: Write tests for `Destroy` using a mock `TerraformClient` (b2b0ade)
-- [ ] Task: Conductor - User Manual Verification 'TFEngine Core & Testing Strategy' (Protocol in workflow.md)
+- [x] Task: Conductor - User Manual Verification 'TFEngine Core & Testing Strategy' (Protocol in workflow.md)
 
 ## Phase 3: Terraform Execution Integration [checkpoint: ]
 **Goal:** Implement the concrete `terraform-exec` calls within the engine.
