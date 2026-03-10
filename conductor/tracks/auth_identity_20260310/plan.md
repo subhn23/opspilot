@@ -4,7 +4,7 @@
 **Goal:** Define and migrate the database models for users, roles, and permissions.
 
 - [x] Task: Create User and Role models in `internal/models/models.go` (7d38b69)
-- [ ] Task: Implement GORM database migration logic
+- [x] Task: Implement GORM database migration logic (ec0b604)
 - [ ] Task: Seed initial roles (Admin, Developer, Viewer) and permissions
 - [ ] Task: Conductor - User Manual Verification 'Data Models & Persistence' (Protocol in workflow.md)
 
