@@ -3,7 +3,7 @@
 ## Phase 1: Data Models & Persistence [checkpoint: ]
 **Goal:** Define and migrate the database models for users, roles, and permissions.
 
-- [ ] Task: Create User and Role models in `internal/models/models.go`
+- [x] Task: Create User and Role models in `internal/models/models.go` (7d38b69)
 - [ ] Task: Implement GORM database migration logic
 - [ ] Task: Seed initial roles (Admin, Developer, Viewer) and permissions
 - [ ] Task: Conductor - User Manual Verification 'Data Models & Persistence' (Protocol in workflow.md)
