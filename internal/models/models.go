@@ -9,16 +9,16 @@ import (
 
 // User represents a platform administrator or developer
 type User struct {
-	ID        uuid.UUID `gorm:"type:uuid;primaryKey"`
-	Email     string    `gorm:"uniqueIndex;not null"`
-	Secret    string    `gorm:"not null"` // TOTP Secret
-	RoleID    uuid.UUID `gorm:"type:uuid;not null"`
-	Role      Role      `gorm:"foreignKey:RoleID"`
-	CreatedAt time.Time
-	UpdatedAt time.Time
-	DeletedAt gorm.DeletedAt `gorm:"index"`
+	ID           uuid.UUID `gorm:"type:uuid;primaryKey"`
+	Email        string    `gorm:"uniqueIndex;not null"`
+	PasswordHash string    `gorm:"not null"`
+	TOTPSecret   string    `gorm:"not null"` // TOTP Secret
+	RoleID       uuid.UUID `gorm:"type:uuid;not null"`
+	Role         Role      `gorm:"foreignKey:RoleID"`
+	CreatedAt    time.Time
+	UpdatedAt    time.Time
+	DeletedAt    gorm.DeletedAt `gorm:"index"`
 }
-
 // Role represents a group of permissions (Admin, Developer, etc.)
 type Role struct {
 	ID          uuid.UUID    `gorm:"type:uuid;primaryKey"`
