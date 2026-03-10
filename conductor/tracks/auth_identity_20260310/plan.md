@@ -20,7 +20,7 @@
 ## Phase 3: Middleware & Security Integration [checkpoint: ]
 **Goal:** Protect routes and enforce RBAC.
 
-- [ ] Task: Write tests for `AuthMiddleware`
+- [x] Task: Write tests for `AuthMiddleware` (81d93b9)
 - [ ] Task: Implement `AuthMiddleware` in `internal/auth/auth.go`
 - [ ] Task: Write tests for `RequirePermission` RBAC middleware
 - [ ] Task: Implement `RequirePermission` middleware
