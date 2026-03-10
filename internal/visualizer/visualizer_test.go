@@ -1,10 +1,14 @@
 package visualizer
 
 import (
+	"net/http/httptest"
 	"opspilot/internal/models"
+	"strings"
 	"testing"
 	"time"
 
+	"github.com/gin-gonic/gin"
+	"github.com/gorilla/websocket"
 	"gorm.io/driver/sqlite"
 	"gorm.io/gorm"
 )
@@ -73,6 +77,43 @@ func TestBuildTopology(t *testing.T) {
 		}
 		if !foundContainer {
 			t.Error("Container node not found in topology")
+		}
+	})
+}
+
+func TestStreamTopologyUpdates(t *testing.T) {
+	gin.SetMode(gin.TestMode)
+	db := setupTestDB()
+	v := NewOpsVisualizer(db)
+
+	r := gin.New()
+	r.GET("/ws", v.StreamTopologyUpdates)
+
+	server := httptest.NewServer(r)
+	defer server.Close()
+
+	// Convert http URL to ws URL
+	wsURL := "ws" + strings.TrimPrefix(server.URL, "http") + "/ws"
+
+	t.Run("Connect and Receive Initial Data", func(t *testing.T) {
+		dialer := websocket.Dialer{}
+		conn, _, err := dialer.Dial(wsURL, nil)
+		if err != nil {
+			t.Fatalf("Failed to connect to WebSocket: %v", err)
+		}
+		defer conn.Close()
+
+		var msg map[string]interface{}
+		err = conn.ReadJSON(&msg)
+		if err != nil {
+			t.Fatalf("Failed to read JSON: %v", err)
+		}
+
+		if _, ok := msg["nodes"]; !ok {
+			t.Error("Expected nodes in message")
+		}
+		if _, ok := msg["edges"]; !ok {
+			t.Error("Expected edges in message")
 		}
 	})
 }
