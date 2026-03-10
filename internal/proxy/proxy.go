@@ -42,11 +42,18 @@ func (p *OpsProxy) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	var route models.ProxyRoute
 	err := p.DB.Where("domain = ? AND is_active = ?", r.Host, true).First(&route).Error
 	if err != nil {
-		http.Error(w, "Not Found", http.StatusNotFound)
+		log.Printf("Proxy: No active route found for domain %s", r.Host)
+		http.Error(w, "Service Not Found", http.StatusNotFound)
 		return
 	}
 
-	target, _ := url.Parse(route.TargetURL)
+	target, err := url.Parse(route.TargetURL)
+	if err != nil {
+		log.Printf("Proxy: Malformed target URL for domain %s: %v", r.Host, err)
+		http.Error(w, "Internal Configuration Error", http.StatusInternalServerError)
+		return
+	}
+
 	proxy := httputil.NewSingleHostReverseProxy(target)
 
 	// Update headers for proxying
@@ -54,6 +61,7 @@ func (p *OpsProxy) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	r.URL.Scheme = target.Scheme
 	r.Header.Set("X-Forwarded-Host", r.Host)
 
+	log.Printf("Proxying request: %s -> %s", r.Host, route.TargetURL)
 	proxy.ServeHTTP(w, r)
 }
 

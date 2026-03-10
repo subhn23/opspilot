@@ -61,4 +61,19 @@ func TestServeHTTP(t *testing.T) {
 	if rr.Code != http.StatusNotFound {
 		t.Errorf("Expected status 404 for missing route, got %d", rr.Code)
 	}
+
+	// 6. Test Malformed Target URL
+	route2 := models.ProxyRoute{
+		Domain:    "badurl.com",
+		TargetURL: " ://invalid-url",
+		IsActive:  true,
+	}
+	db.Create(&route2)
+	req, _ = http.NewRequest("GET", "http://badurl.com", nil)
+	rr = httptest.NewRecorder()
+	proxy.ServeHTTP(rr, req)
+
+	if rr.Code != http.StatusInternalServerError {
+		t.Errorf("Expected status 500 for malformed target, got %d", rr.Code)
+	}
 }
