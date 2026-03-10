@@ -4,9 +4,11 @@ import (
 	"context"
 	"fmt"
 	"log"
+	"opspilot/internal/auth"
 	"opspilot/internal/models"
 	"os/exec"
 
+	"github.com/google/uuid"
 	"gorm.io/gorm"
 )
 
@@ -120,6 +122,10 @@ func (d *Deployer) RemoteUp(ctx context.Context, deploy *models.Deployment, targ
 	}
 
 	d.updateStatus(deploy, "SUCCESS")
+
+	// Audit Log
+	auth.LogAction(d.DB, uuid.Nil, "DEPLOY_SUCCESS", deploy.CommitHash, targetIP, "Remote deployment successful")
+
 	return nil
 }
 

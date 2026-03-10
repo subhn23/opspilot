@@ -21,7 +21,7 @@ func (m *MockScanner) Scan(ctx context.Context, imageName string) (bool, string,
 
 func setupTestDB() *gorm.DB {
 	db, _ := gorm.Open(sqlite.Open(":memory:"), &gorm.Config{})
-	db.AutoMigrate(&models.Deployment{})
+	db.AutoMigrate(&models.Deployment{}, &models.AuditLog{})
 	return db
 }
 
@@ -97,6 +97,13 @@ func TestRemoteUp(t *testing.T) {
 	db.First(&updated, deploy.ID)
 	if updated.Status != "SUCCESS" {
 		t.Errorf("Expected status SUCCESS, got %s", updated.Status)
+	}
+
+	// Verify Audit Log
+	var auditEntry models.AuditLog
+	err = db.Where("action = ?", "DEPLOY_SUCCESS").First(&auditEntry).Error
+	if err != nil {
+		t.Errorf("Failed to find audit log entry: %v", err)
 	}
 }
 
