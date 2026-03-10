@@ -11,9 +11,9 @@
 ## Phase 2: Remote Deployment (SSH) [checkpoint: ]
 **Goal:** Implement the `RemoteUp` logic using SSH.
 
-- [ ] Task: Define `SSHClient` interface for command execution
-- [ ] Task: Implement `RemoteUp` command sequence (pull, up)
-- [ ] Task: Write tests for `RemoteUp` using a mock SSH client
+- [x] Task: Define `SSHClient` interface for command execution (22bee6c)
+- [x] Task: Implement `RemoteUp` command sequence (pull, up) (22bee6c)
+- [x] Task: Write tests for `RemoteUp` using a mock SSH client (22bee6c)
 - [ ] Task: Conductor - User Manual Verification 'Remote Deployment' (Protocol in workflow.md)
 
 ## Phase 3: Engine Orchestration [checkpoint: ]
