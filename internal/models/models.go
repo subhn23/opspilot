@@ -100,6 +100,22 @@ type AuditLog struct {
 	CreatedAt time.Time
 }
 
+// Node represents a visual element in the topology map
+type Node struct {
+	ID       string            `json:"id"`
+	Label    string            `json:"label"`
+	Type     string            `json:"type"`   // Firewall, VM, Container
+	Status   string            `json:"status"` // Green, Red, Yellow
+	Metadata map[string]string `json:"metadata"`
+}
+
+// Edge represents a connection between nodes in the topology map
+type Edge struct {
+	Source string `json:"source"`
+	Target string `json:"target"`
+	Label  string `json:"label"` // HTTP, gRPC, DB
+}
+
 // BeforeCreate hook to generate UUIDs
 func (u *User) BeforeCreate(tx *gorm.DB) (err error) {
 	u.ID = uuid.New()
