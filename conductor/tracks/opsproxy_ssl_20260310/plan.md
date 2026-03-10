@@ -10,7 +10,7 @@
 ## Phase 2: Dynamic SSL Management [checkpoint: ]
 **Goal:** Implement and test dynamic certificate loading and SNI support.
 
-- [ ] Task: Write tests for `GetCertificate` logic (including overrides)
+- [x] Task: Write tests for `GetCertificate` logic (including overrides) (7bf987e)
 - [ ] Task: Refactor/Enhance `GetCertificate` and `parseCert` in `internal/proxy/proxy.go`
 - [ ] Task: Conductor - User Manual Verification 'Dynamic SSL Management' (Protocol in workflow.md)
 
