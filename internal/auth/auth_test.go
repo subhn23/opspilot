@@ -3,6 +3,7 @@ package auth
 import (
 	"net/http"
 	"net/http/httptest"
+	"opspilot/internal/models"
 	"os"
 	"testing"
 	"time"
@@ -10,6 +11,8 @@ import (
 	"github.com/gin-gonic/gin"
 	"github.com/google/uuid"
 	"github.com/pquerna/otp/totp"
+	"gorm.io/driver/sqlite"
+	"gorm.io/gorm"
 )
 
 func TestJWTProvider(t *testing.T) {
@@ -132,5 +135,35 @@ func TestAuthMiddleware(t *testing.T) {
 
 	if w.Code != 401 {
 		t.Errorf("Expected status 401 for invalid token, got %d", w.Code)
+	}
+}
+
+func TestLogAction(t *testing.T) {
+	db, _ := gorm.Open(sqlite.Open(":memory:"), &gorm.Config{})
+	db.AutoMigrate(&models.AuditLog{})
+
+	userID := uuid.New()
+	action := "TEST_ACTION"
+	target := "test-target"
+	ip := "127.0.0.1"
+	payload := `{"key": "value"}`
+
+	// This will fail because LogAction doesn't have the payload param yet
+	LogAction(db, userID, action, target, ip, payload)
+
+	var logEntry models.AuditLog
+	err := db.First(&logEntry).Error
+	if err != nil {
+		t.Fatalf("Failed to find log entry: %v", err)
+	}
+
+	if logEntry.UserID != userID {
+		t.Errorf("Expected UserID %v, got %v", userID, logEntry.UserID)
+	}
+	if logEntry.Action != action {
+		t.Errorf("Expected Action %s, got %s", action, logEntry.Action)
+	}
+	if logEntry.Payload != payload {
+		t.Errorf("Expected Payload %s, got %s", payload, logEntry.Payload)
 	}
 }
