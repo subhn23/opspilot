@@ -11,7 +11,7 @@
 ## Phase 2: Core Authentication Logic [checkpoint: ]
 **Goal:** Implement JWT generation/validation and TOTP verification.
 
-- [ ] Task: Write tests for JWT provider logic
+- [x] Task: Write tests for JWT provider logic (996bb8a)
 - [ ] Task: Implement JWT provider in `internal/auth/auth.go`
 - [ ] Task: Write tests for TOTP enrollment and verification
 - [ ] Task: Implement TOTP logic (using a standard library like `pquerna/otp`)
