@@ -10,9 +10,9 @@
 ## Phase 2: TFEngine Core & Testing Strategy [checkpoint: ]
 **Goal:** Build the `TFEngine` structure and establish a testable interface.
 
-- [ ] Task: Define a `TerraformClient` interface to wrap `tfexec` methods for mocking
-- [ ] Task: Write tests for `Provision` using a mock `TerraformClient`
-- [ ] Task: Write tests for `Destroy` using a mock `TerraformClient`
+- [x] Task: Define a `TerraformClient` interface to wrap `tfexec` methods for mocking (b2b0ade)
+- [x] Task: Write tests for `Provision` using a mock `TerraformClient` (b2b0ade)
+- [x] Task: Write tests for `Destroy` using a mock `TerraformClient` (b2b0ade)
 - [ ] Task: Conductor - User Manual Verification 'TFEngine Core & Testing Strategy' (Protocol in workflow.md)
 
 ## Phase 3: Terraform Execution Integration [checkpoint: ]
