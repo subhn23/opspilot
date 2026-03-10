@@ -14,9 +14,9 @@
 - [x] Task: Implement `LogAction` in `internal/auth/auth.go` (or a more suitable location) (bd992c4)
 - [x] Task: Conductor - User Manual Verification 'Core Logging Logic' (Protocol in workflow.md)
 
-## Phase 3: System-wide Integration [checkpoint: ]
+## Phase 3: System-wide Integration [checkpoint: a20640a]
 **Goal:** Integrate logging into existing modules.
 
 - [x] Task: Add audit logging to `AuthMiddleware` (for failed logins if applicable) (5597e1f)
 - [x] Task: Add audit logging to `OpsProxy` route updates (N/A - No update handlers yet)
-- [ ] Task: Conductor - User Manual Verification 'System-wide Integration' (Protocol in workflow.md)
+- [x] Task: Conductor - User Manual Verification 'System-wide Integration' (Protocol in workflow.md)
