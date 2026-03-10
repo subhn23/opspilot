@@ -3,6 +3,7 @@ package auth
 import (
 	"net/http"
 	"net/http/httptest"
+	"opspilot/internal/config"
 	"opspilot/internal/models"
 	"os"
 	"testing"
@@ -91,6 +92,10 @@ func TestAuthMiddleware(t *testing.T) {
 	secret := "test-secret"
 	userID := uuid.New()
 	roleID := uuid.New()
+
+	// Initialize DB for audit logging in middleware
+	config.DB, _ = gorm.Open(sqlite.Open(":memory:"), &gorm.Config{})
+	config.DB.AutoMigrate(&models.AuditLog{})
 
 	// 1. Success Case: Valid Token
 	token, _ := GenerateToken(userID, roleID, secret, 1*time.Hour)

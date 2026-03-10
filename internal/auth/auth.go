@@ -3,6 +3,7 @@ package auth
 import (
 	"errors"
 	"log"
+	"opspilot/internal/config"
 	"opspilot/internal/models"
 	"os"
 	"strings"
@@ -101,6 +102,7 @@ func AuthMiddleware() gin.HandlerFunc {
 
 		parts := strings.SplitN(authHeader, " ", 2)
 		if !(len(parts) == 2 && parts[0] == "Bearer") {
+			LogAction(config.DB, uuid.Nil, "AUTH_FAILURE", "Invalid Format", c.ClientIP(), authHeader)
 			c.AbortWithStatusJSON(401, gin.H{"error": "Invalid authorization format"})
 			return
 		}
@@ -114,6 +116,7 @@ func AuthMiddleware() gin.HandlerFunc {
 
 		claims, err := ValidateToken(parts[1], secret)
 		if err != nil {
+			LogAction(config.DB, uuid.Nil, "AUTH_FAILURE", "Invalid Token", c.ClientIP(), parts[1])
 			c.AbortWithStatusJSON(401, gin.H{"error": "Invalid or expired token"})
 			return
 		}
