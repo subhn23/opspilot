@@ -8,13 +8,13 @@
 - [~] Task: Write tests for `BuildTopology` with various DB states
 - [x] Task: Conductor - User Manual Verification 'Topology Engine' (Protocol in workflow.md)
 
-## Phase 2: WebSocket Streaming [checkpoint: ]
+## Phase 2: WebSocket Streaming [checkpoint: 2fc6169]
 **Goal:** Stream topology updates to the frontend.
 
 - [x] Task: Implement WebSocket handler in `internal/visualizer/visualizer.go` (1cbc952)
 - [x] Task: Integrate WebSocket handler with Gin router (45f7251)
 - [~] Task: Write tests for WebSocket connection management
-- [ ] Task: Conductor - User Manual Verification 'WebSocket Streaming' (Protocol in workflow.md)
+- [x] Task: Conductor - User Manual Verification 'WebSocket Streaming' (Protocol in workflow.md)
 
 ## Phase 3: Live Integration [checkpoint: ]
 **Goal:** Ensure the system pushes live updates on database changes.
