@@ -4,6 +4,8 @@ import (
 	"errors"
 	"log"
 	"opspilot/internal/models"
+	"os"
+	"strings"
 	"time"
 
 	"github.com/gin-gonic/gin"
@@ -87,12 +89,38 @@ func LogAction(db *gorm.DB, userID uuid.UUID, action string, target string, ip s
 	}
 }
 
-// AuthMiddleware is a placeholder for session/JWT verification
+// AuthMiddleware verifies the JWT in the Authorization header
 func AuthMiddleware() gin.HandlerFunc {
 	return func(c *gin.Context) {
-		// Implementation for Phase 1 Track 3:
-		// Check for session cookie or JWT
-		// If valid, c.Next(), else c.AbortWithStatus(401)
+		authHeader := c.GetHeader("Authorization")
+		if authHeader == "" {
+			c.AbortWithStatusJSON(401, gin.H{"error": "Authorization header required"})
+			return
+		}
+
+		parts := strings.SplitN(authHeader, " ", 2)
+		if !(len(parts) == 2 && parts[0] == "Bearer") {
+			c.AbortWithStatusJSON(401, gin.H{"error": "Invalid authorization format"})
+			return
+		}
+
+		secret := os.Getenv("JWT_SECRET")
+		if secret == "" {
+			log.Println("JWT_SECRET not set in environment")
+			c.AbortWithStatusJSON(500, gin.H{"error": "Internal server error"})
+			return
+		}
+
+		claims, err := ValidateToken(parts[1], secret)
+		if err != nil {
+			c.AbortWithStatusJSON(401, gin.H{"error": "Invalid or expired token"})
+			return
+		}
+
+		// Set identity in context
+		c.Set("user_id", claims.UserID)
+		c.Set("role_id", claims.RoleID)
+
 		c.Next()
 	}
 }
