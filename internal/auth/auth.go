@@ -1,15 +1,59 @@
 package auth
 
 import (
+	"errors"
 	"log"
 	"opspilot/internal/models"
 	"time"
 
 	"github.com/gin-gonic/gin"
+	"github.com/golang-jwt/jwt/v5"
 	"github.com/google/uuid"
 	"github.com/pquerna/otp/totp"
 	"gorm.io/gorm"
 )
+
+// JWTClaims represents the custom claims for the JWT
+type JWTClaims struct {
+	UserID uuid.UUID `json:"user_id"`
+	RoleID uuid.UUID `json:"role_id"`
+	jwt.RegisteredClaims
+}
+
+// GenerateToken creates a new JWT for a user
+func GenerateToken(userID, roleID uuid.UUID, secret string, duration time.Duration) (string, error) {
+	claims := &JWTClaims{
+		UserID: userID,
+		RoleID: roleID,
+		RegisteredClaims: jwt.RegisteredClaims{
+			ExpiresAt: jwt.NewNumericDate(time.Now().Add(duration)),
+			IssuedAt:  jwt.NewNumericDate(time.Now()),
+		},
+	}
+
+	token := jwt.NewWithClaims(jwt.SigningMethodHS256, claims)
+	return token.SignedString([]byte(secret))
+}
+
+// ValidateToken parses and validates a JWT string
+func ValidateToken(tokenString, secret string) (*JWTClaims, error) {
+	token, err := jwt.ParseWithClaims(tokenString, &JWTClaims{}, func(token *jwt.Token) (interface{}, error) {
+		if _, ok := token.Method.(*jwt.SigningMethodHMAC); !ok {
+			return nil, errors.New("unexpected signing method")
+		}
+		return []byte(secret), nil
+	})
+
+	if err != nil {
+		return nil, err
+	}
+
+	if claims, ok := token.Claims.(*JWTClaims); ok && token.Valid {
+		return claims, nil
+	}
+
+	return nil, errors.New("invalid token")
+}
 
 // VerifyTOTP validates the 6-digit MFA code against the user's secret
 func VerifyTOTP(passcode string, secret string) bool {
