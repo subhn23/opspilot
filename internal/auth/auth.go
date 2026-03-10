@@ -55,6 +55,18 @@ func ValidateToken(tokenString, secret string) (*JWTClaims, error) {
 	return nil, errors.New("invalid token")
 }
 
+// GenerateTOTPSecret creates a new MFA secret for a user's enrollment
+func GenerateTOTPSecret(email string) (string, error) {
+	key, err := totp.Generate(totp.GenerateOpts{
+		Issuer:      "OpsPilot",
+		AccountName: email,
+	})
+	if err != nil {
+		return "", err
+	}
+	return key.Secret(), nil
+}
+
 // VerifyTOTP validates the 6-digit MFA code against the user's secret
 func VerifyTOTP(passcode string, secret string) bool {
 	return totp.Validate(passcode, secret)
