@@ -4,7 +4,7 @@
 **Goal:** Define the `Environment` model and prepare the Terraform workspace manager.
 
 - [x] Task: Verify/Create `Environment` model in `internal/models/models.go` (d3198d5)
-- [ ] Task: Ensure `AutoMigrate` includes the `Environment` model
+- [x] Task: Ensure `AutoMigrate` includes the `Environment` model (N/A - Already included)
 - [ ] Task: Conductor - User Manual Verification 'Environment Models & Setup' (Protocol in workflow.md)
 
 ## Phase 2: TFEngine Core & Testing Strategy [checkpoint: ]
