@@ -11,7 +11,7 @@
 - **HTMX:** Leveraged to create interactive UI components with minimal JavaScript by using HTML attributes to trigger AJAX requests. (Inferred from project goals and plans)
 
 ## Infrastructure & Orchestration
-- **Terraform:** The core tool for defining and provisioning the Proxmox virtual infrastructure through "Infrastructure as Code" (IaC).
+- **Terraform & terraform-exec:** The core tools for defining and provisioning the Proxmox virtual infrastructure. `terraform-exec` provides a Go-native wrapper to dynamically manage workspaces and execute apply/destroy commands.
 - **Proxmox Virtual Environment:** The target hypervisor for managing the compute layer (Virtual Machines).
 - **Docker:** Used to containerize and deploy microservices onto the dynamically provisioned Virtual Machines.
 
