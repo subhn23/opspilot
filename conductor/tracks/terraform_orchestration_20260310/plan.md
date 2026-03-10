@@ -18,7 +18,7 @@
 ## Phase 3: Terraform Execution Integration [checkpoint: ]
 **Goal:** Implement the concrete `terraform-exec` calls within the engine.
 
-- [ ] Task: Implement `Provision` using `tfexec` calls in `internal/terraform/terraform.go`
-- [ ] Task: Implement `Destroy` using `tfexec` calls
-- [ ] Task: Implement `setupTF` workspace preparation logic
+- [x] Task: Implement `Provision` using `tfexec` calls in `internal/terraform/terraform.go` (b2b0ade)
+- [x] Task: Implement `Destroy` using `tfexec` calls (b2b0ade)
+- [x] Task: Implement `setupTF` workspace preparation logic (b2b0ade)
 - [ ] Task: Conductor - User Manual Verification 'Terraform Execution Integration' (Protocol in workflow.md)
