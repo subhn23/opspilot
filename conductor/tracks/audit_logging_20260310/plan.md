@@ -18,5 +18,5 @@
 **Goal:** Integrate logging into existing modules.
 
 - [x] Task: Add audit logging to `AuthMiddleware` (for failed logins if applicable) (5597e1f)
-- [ ] Task: Add audit logging to `OpsProxy` route updates
+- [x] Task: Add audit logging to `OpsProxy` route updates (N/A - No update handlers yet)
 - [ ] Task: Conductor - User Manual Verification 'System-wide Integration' (Protocol in workflow.md)
