@@ -7,7 +7,8 @@ This file tracks all major tracks for the project. Each track has its own detail
 ## Phase 1: Foundation (Core Control Plane)
 
 ## Phase 2: Dynamic Infrastructure (Terraform & Docker)
-- [ ] **Track: 2.3: Windows DNS Integration**
+- [~] **Track: 2.3: Windows DNS Integration**
+  *Link: [./tracks/windows_dns_20260310/](./tracks/windows_dns_20260310/)*
 
 ## Phase 3: Governance & Operations (Visibility & Safety)
 - [ ] **Track: 3.1: OpsVisualizer Map**

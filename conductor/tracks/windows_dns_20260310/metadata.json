@@ -1,0 +1,8 @@
+{
+  "track_id": "windows_dns_20260310",
+  "type": "feature",
+  "status": "in_progress",
+  "created_at": "2026-03-10T19:00:00Z",
+  "updated_at": "2026-03-10T19:00:00Z",
+  "description": "Implement the Windows DNS Module for automated/verified records via SSH and PowerShell."
+}
