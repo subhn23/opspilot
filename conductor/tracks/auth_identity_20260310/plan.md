@@ -1,12 +1,12 @@
 # Plan for Track 1.1: Authentication & Identity Core
 
-## Phase 1: Data Models & Persistence [checkpoint: ]
+## Phase 1: Data Models & Persistence [checkpoint: 39c37f3]
 **Goal:** Define and migrate the database models for users, roles, and permissions.
 
 - [x] Task: Create User and Role models in `internal/models/models.go` (7d38b69)
 - [x] Task: Implement GORM database migration logic (ec0b604)
 - [x] Task: Seed initial roles (Admin, Developer, Viewer) and permissions (6326e23)
-- [ ] Task: Conductor - User Manual Verification 'Data Models & Persistence' (Protocol in workflow.md)
+- [x] Task: Conductor - User Manual Verification 'Data Models & Persistence' (Protocol in workflow.md)
 
 ## Phase 2: Core Authentication Logic [checkpoint: ]
 **Goal:** Implement JWT generation/validation and TOTP verification.
