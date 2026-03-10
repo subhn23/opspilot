@@ -99,3 +99,27 @@ func TestRemoteUp(t *testing.T) {
 		t.Errorf("Expected status SUCCESS, got %s", updated.Status)
 	}
 }
+
+func TestBuildAndPush(t *testing.T) {
+	db := setupTestDB()
+	ctx := context.Background()
+	mockScanner := &MockScanner{Safe: true, Report: "All good"}
+	deployer := &Deployer{DB: db, Scanner: mockScanner}
+
+	deploy := &models.Deployment{
+		CommitHash: "feat123",
+	}
+	db.Create(deploy)
+
+	err := deployer.BuildAndPush(ctx, deploy)
+
+	if err != nil {
+		t.Fatalf("BuildAndPush failed: %v", err)
+	}
+
+	var updated models.Deployment
+	db.First(&updated, deploy.ID)
+	if updated.Status != "PUSHED" {
+		t.Errorf("Expected status PUSHED, got %s", updated.Status)
+	}
+}
