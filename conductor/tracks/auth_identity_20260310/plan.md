@@ -23,5 +23,5 @@
 - [x] Task: Write tests for `AuthMiddleware` (81d93b9)
 - [x] Task: Implement `AuthMiddleware` in `internal/auth/auth.go` (6ca60eb)
 - [x] Task: Write tests for `RequirePermission` RBAC middleware (b3d0289)
-- [ ] Task: Implement `RequirePermission` middleware
+- [x] Task: Implement `RequirePermission` middleware (4c8b082)
 - [ ] Task: Conductor - User Manual Verification 'Middleware & Security Integration' (Protocol in workflow.md)
