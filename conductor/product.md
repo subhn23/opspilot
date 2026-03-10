@@ -19,6 +19,7 @@ OpsPilot aims to provide a "Kubernetes-like" experience for developers and IT te
 ## Key Features
 - **Audit & Identity:** Robust authentication with JWT and TOTP MFA, coupled with a granular RBAC system and immutable action logging.
 - **OpsProxy & SSL:** Native Go-based reverse proxy with integrated SSL certificate management.
+- **Automated Windows DNS:** Automated management of A records via PowerShell over SSH, ensuring consistent internal naming.
 - **OpsVisualizer Map:** Interactive node-based map for visualizing the network and service architecture.
 - **Multi-Env Support:** Robust support for Production, Staging, Testing, and Feature environments.
 
