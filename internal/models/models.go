@@ -95,6 +95,7 @@ type AuditLog struct {
 	UserID    uuid.UUID `gorm:"type:uuid"`
 	Action    string    `gorm:"not null"` // e.g., "DEPLOY", "DELETE_VM"
 	Target    string    `gorm:"not null"` // e.g., "VM-Prod-01"
+	Payload   string    `gorm:"type:text"` // JSON payload
 	IPAddress string
 	CreatedAt time.Time
 }
