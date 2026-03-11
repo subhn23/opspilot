@@ -16,7 +16,7 @@
 - [x] Task: Write tests for WebSocket connection management (21ddc9a)
 - [x] Task: Conductor - User Manual Verification 'WebSocket Streaming' (Protocol in workflow.md)
 
-## Phase 3: Live Integration [checkpoint: ]
+## Phase 3: Live Integration [checkpoint: ae59699]
 **Goal:** Ensure the system pushes live updates on database changes.
 
 - [x] Task: Implement a simple pub/sub or hook system to trigger topology refreshes (39208c0)
