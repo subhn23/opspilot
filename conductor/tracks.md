@@ -9,7 +9,5 @@ This file tracks all major tracks for the project. Each track has its own detail
 ## Phase 2: Dynamic Infrastructure (Terraform & Docker)
 
 ## Phase 3: Governance & Operations (Visibility & Safety)
-- [x] **Track: 3.1: OpsVisualizer Map**
-  *Link: [./tracks/opsvisualizer_map_20260310/](./tracks/opsvisualizer_map_20260310/)*
 - [ ] **Track: 3.2: OpsMetric (Time-Series & Health)**
 - [ ] **Track: 3.3: Security & Backup Resilience**
