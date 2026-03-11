@@ -3,6 +3,7 @@ package auth
 import (
 	"net/http"
 	"net/http/httptest"
+	"opspilot/internal/audit"
 	"opspilot/internal/config"
 	"opspilot/internal/models"
 	"os"
@@ -153,8 +154,7 @@ func TestLogAction(t *testing.T) {
 	ip := "127.0.0.1"
 	payload := `{"key": "value"}`
 
-	// This will fail because LogAction doesn't have the payload param yet
-	LogAction(db, userID, action, target, ip, payload)
+	audit.LogAction(db, userID, action, target, ip, payload)
 
 	var logEntry models.AuditLog
 	err := db.First(&logEntry).Error

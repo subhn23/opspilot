@@ -3,8 +3,8 @@ package auth
 import (
 	"errors"
 	"log"
+	"opspilot/internal/audit"
 	"opspilot/internal/config"
-	"opspilot/internal/models"
 	"os"
 	"strings"
 	"time"
@@ -13,7 +13,6 @@ import (
 	"github.com/golang-jwt/jwt/v5"
 	"github.com/google/uuid"
 	"github.com/pquerna/otp/totp"
-	"gorm.io/gorm"
 )
 
 // JWTClaims represents the custom claims for the JWT
@@ -75,22 +74,6 @@ func VerifyTOTP(passcode string, secret string) bool {
 	return totp.Validate(passcode, secret)
 }
 
-// LogAction records a mutation event to the database
-func LogAction(db *gorm.DB, userID uuid.UUID, action string, target string, ip string, payload string) {
-	logEntry := models.AuditLog{
-		UserID:    userID,
-		Action:    action,
-		Target:    target,
-		Payload:   payload,
-		IPAddress: ip,
-		CreatedAt: time.Now(),
-	}
-
-	if err := db.Create(&logEntry).Error; err != nil {
-		log.Printf("Failed to record audit log: %v", err)
-	}
-}
-
 // AuthMiddleware verifies the JWT in the Authorization header
 func AuthMiddleware() gin.HandlerFunc {
 	return func(c *gin.Context) {
@@ -102,7 +85,7 @@ func AuthMiddleware() gin.HandlerFunc {
 
 		parts := strings.SplitN(authHeader, " ", 2)
 		if !(len(parts) == 2 && parts[0] == "Bearer") {
-			LogAction(config.DB, uuid.Nil, "AUTH_FAILURE", "Invalid Format", c.ClientIP(), authHeader)
+			audit.LogAction(config.DB, uuid.Nil, "AUTH_FAILURE", "Invalid Format", c.ClientIP(), authHeader)
 			c.AbortWithStatusJSON(401, gin.H{"error": "Invalid authorization format"})
 			return
 		}
@@ -116,7 +99,7 @@ func AuthMiddleware() gin.HandlerFunc {
 
 		claims, err := ValidateToken(parts[1], secret)
 		if err != nil {
-			LogAction(config.DB, uuid.Nil, "AUTH_FAILURE", "Invalid Token", c.ClientIP(), parts[1])
+			audit.LogAction(config.DB, uuid.Nil, "AUTH_FAILURE", "Invalid Token", c.ClientIP(), parts[1])
 			c.AbortWithStatusJSON(401, gin.H{"error": "Invalid or expired token"})
 			return
 		}

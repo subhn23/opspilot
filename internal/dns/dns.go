@@ -5,7 +5,7 @@ import (
 	"fmt"
 	"log"
 	"net"
-	"opspilot/internal/auth"
+	"opspilot/internal/audit"
 	"time"
 
 	"github.com/google/uuid"
@@ -58,11 +58,11 @@ func (m *DNSManager) UpdateRecordA(ctx context.Context, hostname string, ip stri
 
 	output, err := m.SSH.RunCommand(ctx, m.ServerAddr, psCommand)
 	if err != nil {
-		auth.LogAction(m.DB, uuid.Nil, "DNS_UPDATE_FAILURE", hostname, m.ServerAddr, fmt.Sprintf("Error: %v, Output: %s", err, output))
+		audit.LogAction(m.DB, uuid.Nil, "DNS_UPDATE_FAILURE", hostname, m.ServerAddr, fmt.Sprintf("Error: %v, Output: %s", err, output))
 		return fmt.Errorf("failed to update DNS record via SSH: %w (Output: %s)", err, output)
 	}
 
-	auth.LogAction(m.DB, uuid.Nil, "DNS_UPDATE_SUCCESS", hostname, m.ServerAddr, "DNS record updated successfully via PowerShell")
+	audit.LogAction(m.DB, uuid.Nil, "DNS_UPDATE_SUCCESS", hostname, m.ServerAddr, "DNS record updated successfully via PowerShell")
 	log.Printf("DNS: Successfully updated record for %s", hostname)
 	return nil
 }
@@ -77,12 +77,12 @@ func (m *DNSManager) VerifyDNS(ctx context.Context, hostname string, expectedIP 
 
 	for _, ip := range ips {
 		if ip.String() == expectedIP {
-			auth.LogAction(m.DB, uuid.Nil, "DNS_VERIFY_SUCCESS", hostname, fqdn, "DNS record verified")
+			audit.LogAction(m.DB, uuid.Nil, "DNS_VERIFY_SUCCESS", hostname, fqdn, "DNS record verified")
 			return true, nil
 		}
 	}
 
-	auth.LogAction(m.DB, uuid.Nil, "DNS_VERIFY_FAILURE", hostname, fqdn, "DNS record mismatch")
+	audit.LogAction(m.DB, uuid.Nil, "DNS_VERIFY_FAILURE", hostname, fqdn, "DNS record mismatch")
 	return false, nil
 }
 

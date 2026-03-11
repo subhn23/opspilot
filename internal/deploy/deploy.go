@@ -4,7 +4,7 @@ import (
 	"context"
 	"fmt"
 	"log"
-	"opspilot/internal/auth"
+	"opspilot/internal/audit"
 	"opspilot/internal/models"
 
 	"github.com/google/uuid"
@@ -59,7 +59,7 @@ func (d *Deployer) BuildAndPush(ctx context.Context, deploy *models.Deployment) 
 		d.updateStatus(deploy, "FAILED_SECURITY")
 		deploy.Logs += "\nSECURITY ALERT: " + report
 		d.DB.Save(deploy)
-		auth.LogAction(d.DB, uuid.Nil, "SECURITY_FAILURE", deploy.CommitHash, imageName, report)
+		audit.LogAction(d.DB, uuid.Nil, "SECURITY_FAILURE", deploy.CommitHash, imageName, report)
 		return fmt.Errorf("security scan failed: %s", report)
 	}
 
@@ -99,7 +99,7 @@ func (d *Deployer) RemoteUp(ctx context.Context, deploy *models.Deployment, targ
 	d.updateStatus(deploy, "SUCCESS")
 
 	// Audit Log
-	auth.LogAction(d.DB, uuid.Nil, "DEPLOY_SUCCESS", deploy.CommitHash, targetIP, "Remote deployment successful")
+	audit.LogAction(d.DB, uuid.Nil, "DEPLOY_SUCCESS", deploy.CommitHash, targetIP, "Remote deployment successful")
 
 	return nil
 }
