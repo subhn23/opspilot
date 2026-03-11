@@ -13,7 +13,7 @@
 
 - [x] Task: Implement WebSocket handler `StreamContainerStats` in `internal/metrics/metrics.go`. (81d9e70)
 - [x] Task: Integrate WebSocket handler with Gin router in `main.go`. (88d921c)
-- [ ] Task: Write tests for WebSocket streaming logic.
+- [x] Task: Write tests for WebSocket streaming logic. (8760699)
 - [ ] Task: Conductor - User Manual Verification 'Live Stats Streaming' (Protocol in workflow.md).
 
 ## Phase 3: UI Integration [checkpoint: ]
