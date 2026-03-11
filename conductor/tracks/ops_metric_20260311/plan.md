@@ -21,5 +21,5 @@
 
 - [x] Task: Create UI components for live container stats (HTMX + Alpine.js or simple JS). (866e907)
 - [x] Task: Implement a historical metrics query API endpoint. (21da24e)
-- [ ] Task: Final end-to-end verification of the full metrics pipeline.
+- [x] Task: Final end-to-end verification of the full metrics pipeline. (d6f98b6)
 - [ ] Task: Conductor - User Manual Verification 'UI Integration' (Protocol in workflow.md).
