@@ -5,7 +5,7 @@
 
 - [x] Task: Define Node and Edge models in `internal/models/models.go` (if not already present) (bca49f4)
 - [x] Task: Implement `BuildTopology` logic in `internal/visualizer/visualizer.go` (7699322)
-- [~] Task: Write tests for `BuildTopology` with various DB states
+- [x] Task: Write tests for `BuildTopology` with various DB states (58d633c)
 - [x] Task: Conductor - User Manual Verification 'Topology Engine' (Protocol in workflow.md)
 
 ## Phase 2: WebSocket Streaming [checkpoint: 2fc6169]
@@ -20,5 +20,5 @@
 **Goal:** Ensure the system pushes live updates on database changes.
 
 - [x] Task: Implement a simple pub/sub or hook system to trigger topology refreshes (39208c0)
-- [ ] Task: Verify end-to-end flow from DB mutation to WebSocket message
+- [~] Task: Verify end-to-end flow from DB mutation to WebSocket message
 - [ ] Task: Conductor - User Manual Verification 'Live Integration' (Protocol in workflow.md)
