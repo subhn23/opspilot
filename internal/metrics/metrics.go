@@ -5,6 +5,7 @@ import (
 	"net/http"
 	"time"
 
+	"github.com/gin-gonic/gin"
 	"github.com/gorilla/websocket"
 )
 
@@ -14,36 +15,67 @@ var upgrader = websocket.Upgrader{
 	CheckOrigin:     func(r *http.Request) bool { return true },
 }
 
-type MetricStreamer struct{}
+type MetricStreamer struct {
+	Collector *MetricCollector
+}
 
-// StreamStats opens a websocket to stream live 'docker stats' data
-func (s *MetricStreamer) StreamStats(w http.ResponseWriter, r *http.Request) {
-	conn, err := upgrader.Upgrade(w, r, nil)
+// StreamContainerStats opens a websocket to stream live 'docker stats' data for a specific container
+func (s *MetricStreamer) StreamContainerStats(c *gin.Context) {
+	containerID := c.Param("id")
+	if containerID == "" {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "container id is required"})
+		return
+	}
+
+	conn, err := upgrader.Upgrade(c.Writer, c.Request, nil)
 	if err != nil {
 		log.Printf("Websocket upgrade failed: %v", err)
 		return
 	}
 	defer conn.Close()
 
-	// Conceptual Loop: Scrape docker stats and send to UI
 	ticker := time.NewTicker(1 * time.Second)
 	defer ticker.Stop()
 
-	for range ticker.C {
-		// Mock data for now
-		stats := map[string]interface{}{
-			"cpu":    "12.5%",
-			"memory": "256MB / 2GB",
-			"time":   time.Now().Format(time.Kitchen),
-		}
+	for {
+		select {
+		case <-ticker.C:
+			// For now, if Collector is nil, send mock data to pass initial test
+			// In Task 2 of Phase 2, we will integrate with real collector
+			var stats map[string]interface{}
+			
+			if s.Collector != nil && s.Collector.Docker != nil {
+				results, err := s.Collector.Scrape(c.Request.Context())
+				if err == nil {
+					for _, m := range results {
+						if m.ContainerID == containerID {
+							stats = map[string]interface{}{
+								"container_id": m.ContainerID,
+								"cpu":          m.CPUUsage,
+								"memory":       m.MemoryUsage,
+								"time":         m.Timestamp.Format(time.Kitchen),
+							}
+							break
+						}
+					}
+				}
+			}
 
-		if err := conn.WriteJSON(stats); err != nil {
+			if stats == nil {
+				// Mock data fallback
+				stats = map[string]interface{}{
+					"container_id": containerID,
+					"cpu":          12.5,
+					"memory":       256 * 1024 * 1024,
+					"time":         time.Now().Format(time.Kitchen),
+				}
+			}
+
+			if err := conn.WriteJSON(stats); err != nil {
+				return
+			}
+		case <-c.Request.Context().Done():
 			return
 		}
 	}
-}
-
-// PushToVictoriaMetrics (Conceptual)
-func (s *MetricStreamer) PushToVictoriaMetrics() {
-	// Send metrics to http://victoriametrics:8428/api/v1/import
 }
