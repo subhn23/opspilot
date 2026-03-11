@@ -19,7 +19,7 @@
 ## Phase 3: UI Integration [checkpoint: ]
 **Goal:** Display real-time and historical graphs on the dashboard.
 
-- [ ] Task: Create UI components for live container stats (HTMX + Alpine.js or simple JS).
+- [x] Task: Create UI components for live container stats (HTMX + Alpine.js or simple JS). (866e907)
 - [ ] Task: Implement a historical metrics query API endpoint.
 - [ ] Task: Final end-to-end verification of the full metrics pipeline.
 - [ ] Task: Conductor - User Manual Verification 'UI Integration' (Protocol in workflow.md).
