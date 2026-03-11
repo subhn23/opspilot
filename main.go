@@ -68,6 +68,28 @@ func main() {
 	// Live Metrics WebSocket
 	r.GET("/ws/metrics/:id", streamer.StreamContainerStats)
 
+	// Historical Metrics API
+	r.GET("/api/metrics/history/:id", func(c *gin.Context) {
+		id := c.Param("id")
+		metric := c.Query("metric") // cpu_usage, memory_usage
+		if metric == "" {
+			metric = "cpu_usage"
+		}
+
+		query := fmt.Sprintf("docker_metrics_%s{container_id=\"%s\"}", metric, id)
+		// Last 1 hour
+		end := time.Now()
+		start := end.Add(-1 * time.Hour)
+
+		data, err := collector.QueryRange(c.Request.Context(), query, start, end, "1m")
+		if err != nil {
+			c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+			return
+		}
+
+		c.Data(http.StatusOK, "application/json", []byte(data))
+	})
+
 	// 7. Start Server
 	port := "8080"
 	log.Printf("OpsPilot Control Plane starting on :%s", port)

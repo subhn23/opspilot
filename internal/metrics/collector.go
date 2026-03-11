@@ -7,6 +7,7 @@ import (
 	"fmt"
 	"io"
 	"net/http"
+	"net/url"
 	"time"
 
 	"github.com/moby/moby/api/types/container"
@@ -99,6 +100,45 @@ func (m *MetricCollector) Push(ctx context.Context, metrics []Metric) error {
 	}
 
 	return nil
+}
+
+func (m *MetricCollector) QueryRange(ctx context.Context, query string, start, end time.Time, step string) (string, error) {
+	if m.VictoriaMetricsURL == "" {
+		return "", fmt.Errorf("VictoriaMetrics URL not set")
+	}
+
+	if m.HTTPClient == nil {
+		m.HTTPClient = &http.Client{Timeout: 5 * time.Second}
+	}
+
+	u, err := url.Parse(m.VictoriaMetricsURL + "/api/v1/query_range")
+	if err != nil {
+		return "", err
+	}
+
+	params := u.Query()
+	params.Set("query", query)
+	params.Set("start", fmt.Sprintf("%d", start.Unix()))
+	params.Set("end", fmt.Sprintf("%d", end.Unix()))
+	params.Set("step", step)
+	u.RawQuery = params.Encode()
+
+	resp, err := m.HTTPClient.Get(u.String())
+	if err != nil {
+		return "", fmt.Errorf("failed to query VictoriaMetrics: %w", err)
+	}
+	defer resp.Body.Close()
+
+	body, err := io.ReadAll(resp.Body)
+	if err != nil {
+		return "", err
+	}
+
+	if resp.StatusCode >= 400 {
+		return "", fmt.Errorf("VictoriaMetrics returned error %d: %s", resp.StatusCode, string(body))
+	}
+
+	return string(body), nil
 }
 
 func calculateCPUPercent(v *container.StatsResponse) float64 {

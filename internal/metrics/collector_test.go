@@ -195,3 +195,27 @@ func TestMetricCollector_Push(t *testing.T) {
 		}
 	})
 }
+
+func TestMetricCollector_QueryRange(t *testing.T) {
+	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		if r.URL.Path != "/api/v1/query_range" {
+			t.Errorf("Expected /api/v1/query_range path, got %s", r.URL.Path)
+		}
+		w.WriteHeader(http.StatusOK)
+		w.Write([]byte(`{"status":"success","data":{"resultType":"matrix","result":[]}}`))
+	}))
+	defer server.Close()
+
+	collector := &MetricCollector{
+		VictoriaMetricsURL: server.URL,
+	}
+
+	data, err := collector.QueryRange(context.Background(), "test_query", time.Now().Add(-1*time.Hour), time.Now(), "1m")
+	if err != nil {
+		t.Fatalf("QueryRange failed: %v", err)
+	}
+
+	if !strings.Contains(data, "success") {
+		t.Errorf("Expected success in data, got %s", data)
+	}
+}
