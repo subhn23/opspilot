@@ -21,6 +21,7 @@ OpsPilot aims to provide a "Kubernetes-like" experience for developers and IT te
 - **OpsProxy & SSL:** Native Go-based reverse proxy with integrated SSL certificate management.
 - **Automated Windows DNS:** Automated management of A records via PowerShell over SSH, ensuring consistent internal naming.
 - **OpsVisualizer Map:** Interactive node-based map for visualizing the network and service architecture.
+- **OpsMetric (Live Monitoring):** Real-time performance metrics (CPU/Memory) for Docker containers using VictoriaMetrics and WebSocket streaming.
 - **Multi-Env Support:** Robust support for Production, Staging, Testing, and Feature environments.
 
 ## Constraints & Requirements
