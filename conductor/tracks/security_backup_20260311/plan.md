@@ -16,10 +16,10 @@
 - [x] Task: Write tests for backup configuration logic. (702abaa)
 - [x] Task: Conductor - User Manual Verification 'Database Resilience' (Protocol in workflow.md). (02e7eaa)
 
-## Phase 3: Registry Synchronization [checkpoint: ]
+## Phase 3: Registry Synchronization [checkpoint: 7ce76ee]
 **Goal:** Implement container registry synchronization between nodes.
 
-- [ ] Task: Implement `internal/deploy/registry_sync.go` with `SyncNodes` method.
-- [ ] Task: Setup a background worker to trigger `SyncNodes` every 60 seconds.
-- [ ] Task: Write unit tests for registry synchronization logic.
-- [ ] Task: Conductor - User Manual Verification 'Registry Synchronization' (Protocol in workflow.md).
+- [x] Task: Implement `internal/deploy/registry_sync.go` with `SyncNodes` method. (28f0ee9)
+- [x] Task: Setup a background worker to trigger `SyncNodes` every 60 seconds. (28f0ee9)
+- [x] Task: Write unit tests for registry synchronization logic. (28f0ee9)
+- [x] Task: Conductor - User Manual Verification 'Registry Synchronization' (Protocol in workflow.md). (7ce76ee)
