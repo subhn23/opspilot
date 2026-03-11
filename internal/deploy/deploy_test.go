@@ -46,7 +46,10 @@ func TestScanImage(t *testing.T) {
 
 	t.Run("Unsafe Image", func(t *testing.T) {
 		mock := &MockScanner{Safe: false, Report: "Vulnerability Found"}
-		deployer := &Deployer{Scanner: mock}
+		deployer := &Deployer{DB: setupTestDB(), Scanner: mock}
+
+		deploy := &models.Deployment{CommitHash: "unsafe123"}
+		deployer.DB.Create(deploy)
 
 		safe, report, err := deployer.ScanImage(ctx, "unsafe-image")
 		if err != nil {
@@ -57,6 +60,25 @@ func TestScanImage(t *testing.T) {
 		}
 		if report != "Vulnerability Found" {
 			t.Errorf("Expected report 'Vulnerability Found', got %s", report)
+		}
+
+		// Test integration in BuildAndPush
+		err = deployer.BuildAndPush(ctx, deploy)
+		if err == nil {
+			t.Fatal("Expected error in BuildAndPush for unsafe image")
+		}
+
+		var updated models.Deployment
+		deployer.DB.First(&updated, deploy.ID)
+		if updated.Status != "FAILED_SECURITY" {
+			t.Errorf("Expected status FAILED_SECURITY, got %s", updated.Status)
+		}
+
+		// Verify Audit Log
+		var auditEntry models.AuditLog
+		err = deployer.DB.Where("action = ?", "SECURITY_FAILURE").First(&auditEntry).Error
+		if err != nil {
+			t.Errorf("Failed to find audit log entry for SECURITY_FAILURE: %v", err)
 		}
 	})
 }

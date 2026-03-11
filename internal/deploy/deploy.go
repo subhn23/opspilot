@@ -6,37 +6,11 @@ import (
 	"log"
 	"opspilot/internal/auth"
 	"opspilot/internal/models"
-	"os/exec"
 
 	"github.com/google/uuid"
 	"gorm.io/gorm"
 )
 
-// Scanner abstracts the vulnerability scanning logic
-type Scanner interface {
-	Scan(ctx context.Context, imageName string) (bool, string, error)
-}
-
-// RealScanner uses the Trivy binary to scan images
-type RealScanner struct{}
-
-func (s *RealScanner) Scan(ctx context.Context, imageName string) (bool, string, error) {
-	log.Printf("Trivy: Scanning image %s", imageName)
-	cmd := exec.CommandContext(ctx, "trivy", "image", "--severity", "CRITICAL,HIGH", "--exit-code", "1", imageName)
-	output, err := cmd.CombinedOutput()
-
-	if err != nil {
-		// If exit code is 1, vulnerabilities were found
-		if exitErr, ok := err.(*exec.ExitError); ok && exitErr.ExitCode() == 1 {
-			return false, string(output), nil
-		}
-		return false, string(output), fmt.Errorf("trivy execution failed: %w", err)
-	}
-
-	return true, "No critical or high vulnerabilities found.", nil
-}
-
-// SSHClient abstracts the remote command execution logic
 type SSHClient interface {
 	RunCommand(ctx context.Context, addr, command string) (string, error)
 }
@@ -85,6 +59,7 @@ func (d *Deployer) BuildAndPush(ctx context.Context, deploy *models.Deployment) 
 		d.updateStatus(deploy, "FAILED_SECURITY")
 		deploy.Logs += "\nSECURITY ALERT: " + report
 		d.DB.Save(deploy)
+		auth.LogAction(d.DB, uuid.Nil, "SECURITY_FAILURE", deploy.CommitHash, imageName, report)
 		return fmt.Errorf("security scan failed: %s", report)
 	}
 
