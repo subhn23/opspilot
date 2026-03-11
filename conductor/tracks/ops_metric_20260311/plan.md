@@ -5,7 +5,7 @@
 
 - [x] Task: Implement `internal/metrics/collector.go` with `MetricCollector` struct and `Scrape` method. (300ae5d)
 - [x] Task: Integrate VictoriaMetrics client (e.g., using InfluxDB line protocol over HTTP). (ab15946)
-- [ ] Task: Write unit tests for `MetricCollector` with mocked Docker daemon and VictoriaMetrics server.
+- [x] Task: Write unit tests for `MetricCollector` with mocked Docker daemon and VictoriaMetrics server. (78965b0)
 - [ ] Task: Conductor - User Manual Verification 'Collection Engine' (Protocol in workflow.md).
 
 ## Phase 2: Live Stats Streaming [checkpoint: ]
