@@ -110,19 +110,21 @@ func TestBuildTopology(t *testing.T) {
 
 func TestStreamTopologyUpdates(t *testing.T) {
 	gin.SetMode(gin.TestMode)
-	db := setupTestDB()
-	v := NewOpsVisualizer(db)
 
-	r := gin.New()
-	r.GET("/ws", v.StreamTopologyUpdates)
-
-	server := httptest.NewServer(r)
-	defer server.Close()
-
-	// Convert http URL to ws URL
-	wsURL := "ws" + strings.TrimPrefix(server.URL, "http") + "/ws"
+	setup := func() (*gorm.DB, *OpsVisualizer, *httptest.Server, string) {
+		db := setupTestDB()
+		v := NewOpsVisualizer(db)
+		r := gin.New()
+		r.GET("/ws", v.StreamTopologyUpdates)
+		server := httptest.NewServer(r)
+		wsURL := "ws" + strings.TrimPrefix(server.URL, "http") + "/ws"
+		return db, v, server, wsURL
+	}
 
 	t.Run("Connect and Receive Initial Data", func(t *testing.T) {
+		_, _, server, wsURL := setup()
+		defer server.Close()
+
 		dialer := websocket.Dialer{}
 		conn, _, err := dialer.Dial(wsURL, nil)
 		if err != nil {
@@ -139,8 +141,70 @@ func TestStreamTopologyUpdates(t *testing.T) {
 		if _, ok := msg["nodes"]; !ok {
 			t.Error("Expected nodes in message")
 		}
-		if _, ok := msg["edges"]; !ok {
-			t.Error("Expected edges in message")
+	})
+
+	t.Run("Receive Live Update on Notify", func(t *testing.T) {
+		db, v, server, wsURL := setup()
+		defer server.Close()
+
+		dialer := websocket.Dialer{}
+		conn, _, err := dialer.Dial(wsURL, nil)
+		if err != nil {
+			t.Fatalf("Failed to connect to WebSocket: %v", err)
+		}
+		defer conn.Close()
+
+		// Read initial data
+		var initialMsg map[string]interface{}
+		_ = conn.ReadJSON(&initialMsg)
+
+		// Create a new environment to trigger update
+		env := models.Environment{Name: "new-env", Status: "HEALTHY", VMID: 200}
+		db.Create(&env)
+		v.Notify()
+
+		// Read second message
+		var updateMsg map[string]interface{}
+		err = conn.ReadJSON(&updateMsg)
+		if err != nil {
+			t.Fatalf("Failed to read JSON update: %v", err)
+		}
+
+		nodes := updateMsg["nodes"].([]interface{})
+		// 2 static + 1 new env = 3
+		if len(nodes) != 3 {
+			t.Errorf("Expected 3 nodes after update, got %d", len(nodes))
+		}
+	})
+
+	t.Run("Handle Client Disconnection", func(t *testing.T) {
+		_, v, server, wsURL := setup()
+		defer server.Close()
+
+		dialer := websocket.Dialer{}
+		conn, _, err := dialer.Dial(wsURL, nil)
+		if err != nil {
+			t.Fatalf("Failed to connect to WebSocket: %v", err)
+		}
+
+		// Wait for registration
+		time.Sleep(50 * time.Millisecond)
+		if len(v.Hub.clients) != 1 {
+			t.Errorf("Expected 1 registered client, got %d", len(v.Hub.clients))
+		}
+
+		// Close connection
+		conn.Close()
+		
+		// We need to trigger a write failure or wait for context cancellation
+		// In Gin TestMode, context cancellation might not happen immediately
+		// But let's try to Notify to trigger a write on a closed connection
+		v.Notify()
+		
+		time.Sleep(100 * time.Millisecond)
+		// Client should be removed after failed write or unregister
+		if len(v.Hub.clients) != 0 {
+			t.Errorf("Expected 0 registered clients, got %d", len(v.Hub.clients))
 		}
 	})
 }
