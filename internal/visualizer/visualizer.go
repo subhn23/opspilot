@@ -170,7 +170,7 @@ func (v *OpsVisualizer) BuildTopology() ([]models.Node, []models.Edge) {
 				Label:    fmt.Sprintf("App (%s)", latestDeploy.CommitHash[:7]),
 				Type:     "container",
 				Status:   "Green",
-				Metadata: map[string]string{"hash": latestDeploy.CommitHash, "branch": latestDeploy.Branch},
+				Metadata: map[string]string{"hash": latestDeploy.CommitHash, "branch": latestDeploy.Branch, "container_id": latestDeploy.ContainerID},
 			})
 			edges = append(edges, models.Edge{Source: env.ID.String(), Target: nodeID, Label: "Docker"})
 		}

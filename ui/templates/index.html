@@ -9,7 +9,7 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/cytoscape/3.28.1/cytoscape.min.js"></script>
     <script defer src="https://unpkg.com/alpinejs@3.x.x/dist/cdn.min.js"></script>
 </head>
-<body class="bg-slate-50 font-sans text-slate-900" x-data="{ sidebarOpen: false }">
+<body class="bg-slate-50 font-sans text-slate-900" x-data="{ sidebarOpen: false, activeMetrics: {} }">
     <div class="flex h-screen overflow-hidden">
         
         <!-- Mobile Sidebar Overlay -->
@@ -95,16 +95,23 @@
                                 <th class="px-6 py-3">Status</th>
                                 <th class="px-6 py-3">CPU Usage</th>
                                 <th class="px-6 py-3">Memory</th>
-                                <th class="px-6 py-3">Uptime</th>
+                                <th class="px-6 py-3">Last Updated</th>
                             </tr>
                         </thead>
                         <tbody class="divide-y divide-slate-100 text-sm" id="metrics-body">
-                            <tr class="hover:bg-slate-50 transition-colors">
-                                <td class="px-6 py-4 font-semibold">auth-service</td>
-                                <td class="px-6 py-4"><span class="px-2 py-1 bg-green-100 text-green-700 rounded-full text-xs font-bold">HEALTHY</span></td>
-                                <td class="px-6 py-4 text-slate-600">1.2%</td>
-                                <td class="px-6 py-4 text-slate-600">128MB</td>
-                                <td class="px-6 py-4 text-slate-600">4d 12h</td>
+                            <template x-for="(data, id) in activeMetrics" :key="id">
+                                <tr class="hover:bg-slate-50 transition-colors">
+                                    <td class="px-6 py-4 font-semibold" x-text="data.name || id"></td>
+                                    <td class="px-6 py-4">
+                                        <span class="px-2 py-1 bg-green-100 text-green-700 rounded-full text-xs font-bold" x-text="data.cpu > 0 ? 'ACTIVE' : 'IDLE'"></span>
+                                    </td>
+                                    <td class="px-6 py-4 text-slate-600" x-text="(data.cpu || 0).toFixed(2) + '%'"></td>
+                                    <td class="px-6 py-4 text-slate-600" x-text="((data.memory || 0) / 1024 / 1024).toFixed(2) + ' MB'"></td>
+                                    <td class="px-6 py-4 text-slate-600" x-text="data.time || 'N/A'"></td>
+                                </tr>
+                            </template>
+                            <tr x-show="Object.keys(activeMetrics).length === 0">
+                                <td colspan="5" class="px-6 py-8 text-center text-slate-400 italic">Click a container in the map to see live metrics</td>
                             </tr>
                         </tbody>
                     </table>
@@ -162,7 +169,7 @@
                 layout: { name: 'breadthfirst', directed: true, padding: 10 }
             });
 
-            // WebSocket Connection
+            // WebSocket Connection for Topology
             const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
             const ws = new WebSocket(`${protocol}//${window.location.host}/ws/topology`);
 
@@ -173,7 +180,13 @@
                 // Transform data for Cytoscape
                 const elements = [];
                 data.nodes.forEach(node => {
-                    elements.push({ data: { id: node.id, label: node.label, status: node.status, type: node.type } });
+                    elements.push({ data: { 
+                        id: node.id, 
+                        label: node.label, 
+                        status: node.status, 
+                        type: node.type, 
+                        container_id: node.metadata ? node.metadata.container_id : null 
+                    } });
                 });
                 data.edges.forEach(edge => {
                     elements.push({ data: { source: edge.source, target: edge.target, label: edge.label } });
@@ -185,9 +198,67 @@
             };
 
             ws.onclose = function() {
-                console.log("WebSocket connection closed. Retrying in 5s...");
+                console.log("Topology WebSocket closed. Retrying in 5s...");
                 setTimeout(() => location.reload(), 5000);
             };
+
+            // Event handler for clicking container nodes
+            cy.on('tap', 'node[type="container"]', function(evt){
+                const node = evt.target;
+                const containerId = node.data('container_id');
+                const label = node.data('label');
+                
+                if (!containerId) {
+                    console.log("No container ID for node", label);
+                    return;
+                }
+
+                startMetricStream(containerId, label);
+            });
+
+            const metricSockets = {};
+
+            function startMetricStream(id, name) {
+                if (metricSockets[id]) return;
+
+                console.log("Starting metric stream for", name, id);
+                const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
+                const mws = new WebSocket(`${protocol}//${window.location.host}/ws/metrics/${id}`);
+                metricSockets[id] = mws;
+
+                mws.onmessage = function(event) {
+                    const stats = JSON.parse(event.data);
+                    // Update Alpine state via store
+                    if (window.Alpine) {
+                        window.Alpine.store('metrics').update(id, {
+                            name: name,
+                            cpu: stats.cpu,
+                            memory: stats.memory,
+                            time: stats.time
+                        });
+                    }
+                };
+
+                mws.onclose = function() {
+                    console.log("Metric stream closed for", name);
+                    delete metricSockets[id];
+                };
+            }
+        });
+
+        // Initialize Alpine store for metrics
+        document.addEventListener('alpine:init', () => {
+            Alpine.store('metrics', {
+                data: {},
+                update(id, val) {
+                    this.data[id] = val;
+                    // Trigger reactivity by updating the activeMetrics in the main component
+                    const body = document.querySelector('body');
+                    if (body && body.__x) {
+                        body.__x.$data.activeMetrics = { ...this.data };
+                    }
+                }
+            })
         });
     </script>
 </body>

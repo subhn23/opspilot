@@ -84,6 +84,7 @@ type Deployment struct {
 	Environment   Environment
 	CommitHash    string `gorm:"not null"`
 	Branch        string `gorm:"not null"`
+	ContainerID   string // Real Docker container ID
 	Status        string // Building, Pushing, Deploying, Success, Failed
 	Logs          string `gorm:"type:text"`
 	DeployedBy    string
