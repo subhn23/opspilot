@@ -13,7 +13,7 @@
 
 - [x] Task: Implement WebSocket handler in `internal/visualizer/visualizer.go` (1cbc952)
 - [x] Task: Integrate WebSocket handler with Gin router (45f7251)
-- [~] Task: Write tests for WebSocket connection management
+- [x] Task: Write tests for WebSocket connection management (21ddc9a)
 - [x] Task: Conductor - User Manual Verification 'WebSocket Streaming' (Protocol in workflow.md)
 
 ## Phase 3: Live Integration [checkpoint: ]
