@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>{{ .Title }} | OpsPilot</title>
-    <link href="/static/css/output.css" rel="stylesheet">
+    <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://unpkg.com/htmx.org@1.9.10"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/cytoscape/3.28.1/cytoscape.min.js"></script>
     <script defer src="https://unpkg.com/alpinejs@3.x.x/dist/cdn.min.js"></script>
@@ -114,26 +114,80 @@
         </div>
     </div>
 
-    <!-- Cytoscape Initialization -->
+    <!-- Cytoscape Initialization & WebSocket -->
     <script>
         document.addEventListener('DOMContentLoaded', function(){
             var cy = cytoscape({
                 container: document.getElementById('cy'),
-                elements: [
-                    { data: { id: 'fw', label: 'Firewall' } },
-                    { data: { id: 'vip', label: 'VIP' } },
-                    { data: { id: 'proxy', label: 'OpsProxy' } },
-                    { data: { id: 'vm1', label: 'App-Prod' } },
-                    { data: { source: 'fw', target: 'vip' } },
-                    { data: { source: 'vip', target: 'proxy' } },
-                    { data: { source: 'proxy', target: 'vm1' } }
-                ],
                 style: [
-                    { selector: 'node', style: { 'label': 'data(label)', 'background-color': '#4f46e5', 'color': '#1e293b', 'font-size': '12px' } },
-                    { selector: 'edge', style: { 'width': 2, 'line-color': '#cbd5e1', 'target-arrow-color': '#cbd5e1', 'target-arrow-shape': 'triangle', 'curve-style': 'bezier' } }
+                    { 
+                        selector: 'node', 
+                        style: { 
+                            'label': 'data(label)', 
+                            'background-color': '#4f46e5', 
+                            'color': '#1e293b', 
+                            'font-size': '10px',
+                            'text-valign': 'bottom',
+                            'text-margin-y': '5px',
+                            'width': '30px',
+                            'height': '30px'
+                        } 
+                    },
+                    {
+                        selector: 'node[status="Green"]',
+                        style: { 'background-color': '#22c55e' }
+                    },
+                    {
+                        selector: 'node[status="Red"]',
+                        style: { 'background-color': '#ef4444' }
+                    },
+                    {
+                        selector: 'node[status="Yellow"]',
+                        style: { 'background-color': '#eab308' }
+                    },
+                    { 
+                        selector: 'edge', 
+                        style: { 
+                            'width': 2, 
+                            'line-color': '#cbd5e1', 
+                            'target-arrow-color': '#cbd5e1', 
+                            'target-arrow-shape': 'triangle', 
+                            'curve-style': 'bezier',
+                            'label': 'data(label)',
+                            'font-size': '8px',
+                            'text-rotation': 'autorotate'
+                        } 
+                    }
                 ],
-                layout: { name: 'grid', rows: 1 }
+                layout: { name: 'breadthfirst', directed: true, padding: 10 }
             });
+
+            // WebSocket Connection
+            const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
+            const ws = new WebSocket(`${protocol}//${window.location.host}/ws/topology`);
+
+            ws.onmessage = function(event) {
+                const data = JSON.parse(event.data);
+                console.log("Topology Update:", data);
+                
+                // Transform data for Cytoscape
+                const elements = [];
+                data.nodes.forEach(node => {
+                    elements.push({ data: { id: node.id, label: node.label, status: node.status, type: node.type } });
+                });
+                data.edges.forEach(edge => {
+                    elements.push({ data: { source: edge.source, target: edge.target, label: edge.label } });
+                });
+
+                cy.elements().remove();
+                cy.add(elements);
+                cy.layout({ name: 'breadthfirst', directed: true }).run();
+            };
+
+            ws.onclose = function() {
+                console.log("WebSocket connection closed. Retrying in 5s...");
+                setTimeout(() => location.reload(), 5000);
+            };
         });
     </script>
 </body>
