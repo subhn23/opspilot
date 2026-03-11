@@ -21,4 +21,4 @@
 
 - [x] Task: Implement a simple pub/sub or hook system to trigger topology refreshes (39208c0)
 - [x] Task: Verify end-to-end flow from DB mutation to WebSocket message (4fde7ee)
-- [ ] Task: Conductor - User Manual Verification 'Live Integration' (Protocol in workflow.md)
+- [x] Task: Conductor - User Manual Verification 'Live Integration' (Protocol in workflow.md) (8e41f00)
