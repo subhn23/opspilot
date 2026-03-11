@@ -8,13 +8,13 @@
 - [x] Task: Write unit tests for `MetricCollector` with mocked Docker daemon and VictoriaMetrics server. (78965b0)
 - [x] Task: Conductor - User Manual Verification 'Collection Engine' (Protocol in workflow.md). (c7c09d8)
 
-## Phase 2: Live Stats Streaming [checkpoint: ]
+## Phase 2: Live Stats Streaming [checkpoint: 3386be1]
 **Goal:** Stream live metrics to the frontend via WebSockets.
 
 - [x] Task: Implement WebSocket handler `StreamContainerStats` in `internal/metrics/metrics.go`. (81d9e70)
 - [x] Task: Integrate WebSocket handler with Gin router in `main.go`. (88d921c)
 - [x] Task: Write tests for WebSocket streaming logic. (8760699)
-- [ ] Task: Conductor - User Manual Verification 'Live Stats Streaming' (Protocol in workflow.md).
+- [x] Task: Conductor - User Manual Verification 'Live Stats Streaming' (Protocol in workflow.md). (b58175b)
 
 ## Phase 3: UI Integration [checkpoint: ]
 **Goal:** Display real-time and historical graphs on the dashboard.
