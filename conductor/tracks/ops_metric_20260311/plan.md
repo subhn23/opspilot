@@ -4,7 +4,7 @@
 **Goal:** Implement the logic to scrape Docker stats and push to VictoriaMetrics.
 
 - [x] Task: Implement `internal/metrics/collector.go` with `MetricCollector` struct and `Scrape` method. (300ae5d)
-- [ ] Task: Integrate VictoriaMetrics client (e.g., using InfluxDB line protocol over HTTP).
+- [x] Task: Integrate VictoriaMetrics client (e.g., using InfluxDB line protocol over HTTP). (ab15946)
 - [ ] Task: Write unit tests for `MetricCollector` with mocked Docker daemon and VictoriaMetrics server.
 - [ ] Task: Conductor - User Manual Verification 'Collection Engine' (Protocol in workflow.md).
 
