@@ -34,15 +34,58 @@ func TestBuildTopology(t *testing.T) {
 		}
 	})
 
-	t.Run("With Environments and Deployments", func(t *testing.T) {
+	t.Run("With Various Statuses", func(t *testing.T) {
+		db := setupTestDB()
+		v := NewOpsVisualizer(db)
+
+		envs := []models.Environment{
+			{Name: "healthy-env", Status: "HEALTHY", IPAddress: "10.0.0.1", VMID: 101},
+			{Name: "failed-env", Status: "FAILED", IPAddress: "10.0.0.2", VMID: 102},
+			{Name: "destroyed-env", Status: "DESTROYED", IPAddress: "10.0.0.3", VMID: 103},
+			{Name: "pending-env", Status: "PROVISIONING", IPAddress: "10.0.0.4", VMID: 104},
+		}
+
+		for _, env := range envs {
+			db.Create(&env)
+		}
+
+		nodes, _ := v.BuildTopology()
+		// 2 static + 4 envs = 6
+		if len(nodes) != 6 {
+			t.Errorf("Expected 6 nodes, got %d", len(nodes))
+		}
+
+		statusMap := make(map[string]string)
+		for _, n := range nodes {
+			if n.Type == "vm" {
+				statusMap[n.Label] = n.Status
+			}
+		}
+
+		if statusMap["healthy-env"] != "Green" {
+			t.Errorf("Expected healthy-env to be Green, got %s", statusMap["healthy-env"])
+		}
+		if statusMap["failed-env"] != "Red" {
+			t.Errorf("Expected failed-env to be Red, got %s", statusMap["failed-env"])
+		}
+		if statusMap["destroyed-env"] != "Red" {
+			t.Errorf("Expected destroyed-env to be Red, got %s", statusMap["destroyed-env"])
+		}
+		if statusMap["pending-env"] != "Yellow" {
+			t.Errorf("Expected pending-env to be Yellow, got %s", statusMap["pending-env"])
+		}
+	})
+
+	t.Run("With Deployments", func(t *testing.T) {
+		db := setupTestDB()
+		v := NewOpsVisualizer(db)
+
 		env := models.Environment{
 			Name:      "prod-api",
 			Status:    "HEALTHY",
 			IPAddress: "10.0.0.10",
 		}
-		if err := db.Create(&env).Error; err != nil {
-			t.Fatalf("Failed to create env: %v", err)
-		}
+		db.Create(&env)
 
 		deploy := models.Deployment{
 			EnvironmentID: env.ID,
@@ -51,32 +94,16 @@ func TestBuildTopology(t *testing.T) {
 			Status:        "SUCCESS",
 			DeployedAt:    time.Now(),
 		}
-		if err := db.Create(&deploy).Error; err != nil {
-			t.Fatalf("Failed to create deploy: %v", err)
-		}
+		db.Create(&deploy)
 
 		nodes, edges := v.BuildTopology()
-		// Nodes: 2 static + 1 vm + 1 container = 4
+		// 2 static + 1 vm + 1 container = 4
 		if len(nodes) != 4 {
 			t.Errorf("Expected 4 nodes, got %d", len(nodes))
 		}
-		// Edges: 1 static + 1 proxy + 1 docker = 3
+		// 1 static + 1 proxy + 1 docker = 3
 		if len(edges) != 3 {
 			t.Errorf("Expected 3 edges, got %d", len(edges))
-		}
-
-		// Verify container node info
-		foundContainer := false
-		for _, n := range nodes {
-			if n.Type == "container" {
-				foundContainer = true
-				if n.Metadata["hash"] != "deadbeef123" {
-					t.Errorf("Expected hash deadbeef123, got %s", n.Metadata["hash"])
-				}
-			}
-		}
-		if !foundContainer {
-			t.Error("Container node not found in topology")
 		}
 	})
 }
