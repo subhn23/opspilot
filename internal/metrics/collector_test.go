@@ -4,8 +4,11 @@ import (
 	"context"
 	"encoding/json"
 	"io"
+	"net/http"
+	"net/http/httptest"
 	"strings"
 	"testing"
+	"time"
 
 	"github.com/moby/moby/api/types/container"
 	"github.com/moby/moby/client"
@@ -76,5 +79,34 @@ func TestMetricCollector_Scrape(t *testing.T) {
 
 	if m.MemoryUsage != 512 {
 		t.Errorf("Expected MemoryUsage 512, got %d", m.MemoryUsage)
+	}
+}
+
+func TestMetricCollector_Push(t *testing.T) {
+	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		if r.URL.Path != "/write" {
+			t.Errorf("Expected /write path, got %s", r.URL.Path)
+		}
+		w.WriteHeader(http.StatusNoContent)
+	}))
+	defer server.Close()
+
+	collector := &MetricCollector{
+		VictoriaMetricsURL: server.URL,
+	}
+
+	metrics := []Metric{
+		{
+			ContainerID:   "test-id",
+			ContainerName: "test-container",
+			CPUUsage:      10.5,
+			MemoryUsage:   1024,
+			Timestamp:     time.Now(),
+		},
+	}
+
+	err := collector.Push(context.Background(), metrics)
+	if err != nil {
+		t.Fatalf("Push failed: %v", err)
 	}
 }

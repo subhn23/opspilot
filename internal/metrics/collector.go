@@ -1,9 +1,12 @@
 package metrics
 
 import (
+	"bytes"
 	"context"
 	"encoding/json"
 	"fmt"
+	"io"
+	"net/http"
 	"time"
 
 	"github.com/moby/moby/api/types/container"
@@ -24,7 +27,9 @@ type DockerClient interface {
 }
 
 type MetricCollector struct {
-	Docker DockerClient
+	Docker             DockerClient
+	VictoriaMetricsURL string
+	HTTPClient         *http.Client
 }
 
 func (m *MetricCollector) Scrape(ctx context.Context) ([]Metric, error) {
@@ -62,6 +67,38 @@ func (m *MetricCollector) Scrape(ctx context.Context) ([]Metric, error) {
 	}
 
 	return metrics, nil
+}
+
+func (m *MetricCollector) Push(ctx context.Context, metrics []Metric) error {
+	if m.VictoriaMetricsURL == "" {
+		return fmt.Errorf("VictoriaMetrics URL not set")
+	}
+
+	if m.HTTPClient == nil {
+		m.HTTPClient = &http.Client{Timeout: 5 * time.Second}
+	}
+
+	var buf bytes.Buffer
+	for _, met := range metrics {
+		// InfluxDB Line Protocol: measurement,tags fields timestamp
+		// docker_metrics,container_id=xxx,container_name=yyy cpu_usage=10.5,memory_usage=1024 timestamp_ns
+		line := fmt.Sprintf("docker_metrics,container_id=%s,container_name=%s cpu_usage=%f,memory_usage=%d %d\n",
+			met.ContainerID, met.ContainerName, met.CPUUsage, met.MemoryUsage, met.Timestamp.UnixNano())
+		buf.WriteString(line)
+	}
+
+	resp, err := m.HTTPClient.Post(m.VictoriaMetricsURL+"/write", "text/plain", &buf)
+	if err != nil {
+		return fmt.Errorf("failed to push to VictoriaMetrics: %w", err)
+	}
+	defer resp.Body.Close()
+
+	if resp.StatusCode >= 400 {
+		body, _ := io.ReadAll(resp.Body)
+		return fmt.Errorf("VictoriaMetrics returned error %d: %s", resp.StatusCode, string(body))
+	}
+
+	return nil
 }
 
 func calculateCPUPercent(v *container.StatsResponse) float64 {
