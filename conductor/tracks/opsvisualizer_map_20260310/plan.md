@@ -20,5 +20,5 @@
 **Goal:** Ensure the system pushes live updates on database changes.
 
 - [x] Task: Implement a simple pub/sub or hook system to trigger topology refreshes (39208c0)
-- [~] Task: Verify end-to-end flow from DB mutation to WebSocket message
+- [x] Task: Verify end-to-end flow from DB mutation to WebSocket message (4fde7ee)
 - [ ] Task: Conductor - User Manual Verification 'Live Integration' (Protocol in workflow.md)
