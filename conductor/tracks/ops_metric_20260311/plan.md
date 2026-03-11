@@ -1,12 +1,12 @@
 # Plan for Track 3.2: OpsMetric
 
-## Phase 1: Metric Collection Engine [checkpoint: ]
+## Phase 1: Metric Collection Engine [checkpoint: 2cf1138]
 **Goal:** Implement the logic to scrape Docker stats and push to VictoriaMetrics.
 
 - [x] Task: Implement `internal/metrics/collector.go` with `MetricCollector` struct and `Scrape` method. (300ae5d)
 - [x] Task: Integrate VictoriaMetrics client (e.g., using InfluxDB line protocol over HTTP). (ab15946)
 - [x] Task: Write unit tests for `MetricCollector` with mocked Docker daemon and VictoriaMetrics server. (78965b0)
-- [ ] Task: Conductor - User Manual Verification 'Collection Engine' (Protocol in workflow.md).
+- [x] Task: Conductor - User Manual Verification 'Collection Engine' (Protocol in workflow.md). (c7c09d8)
 
 ## Phase 2: Live Stats Streaming [checkpoint: ]
 **Goal:** Stream live metrics to the frontend via WebSockets.
