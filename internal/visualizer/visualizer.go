@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"log"
 	"net/http"
+	"opspilot/internal/events"
 	"opspilot/internal/models"
 	"time"
 
@@ -35,8 +36,15 @@ func NewHub() *Hub {
 }
 
 func (h *Hub) Run() {
+	// Subscribe to global event bus
+	eventCh := events.GlobalBus.Subscribe()
+	defer events.GlobalBus.Unsubscribe(eventCh)
+
 	for {
 		select {
+		case <-eventCh:
+			// Trigger a broadcast when global event occurs
+			go func() { h.broadcast <- true }()
 		case client := <-h.register:
 			h.clients[client] = true
 		case client := <-h.unregister:

@@ -1,6 +1,7 @@
 package models
 
 import (
+	"opspilot/internal/events"
 	"time"
 
 	"github.com/google/uuid"
@@ -129,5 +130,15 @@ func (r *Role) BeforeCreate(tx *gorm.DB) (err error) {
 
 func (e *Environment) BeforeCreate(tx *gorm.DB) (err error) {
 	e.ID = uuid.New()
+	return
+}
+
+func (e *Environment) AfterSave(tx *gorm.DB) (err error) {
+	events.Notify()
+	return
+}
+
+func (d *Deployment) AfterSave(tx *gorm.DB) (err error) {
+	events.Notify()
 	return
 }

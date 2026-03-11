@@ -177,6 +177,41 @@ func TestStreamTopologyUpdates(t *testing.T) {
 		}
 	})
 
+	t.Run("Receive Live Update on DB Mutation", func(t *testing.T) {
+		db, _, server, wsURL := setup()
+		defer server.Close()
+
+		dialer := websocket.Dialer{}
+		conn, _, err := dialer.Dial(wsURL, nil)
+		if err != nil {
+			t.Fatalf("Failed to connect to WebSocket: %v", err)
+		}
+		defer conn.Close()
+
+		// Read initial data
+		var initialMsg map[string]interface{}
+		_ = conn.ReadJSON(&initialMsg)
+
+		// Create a new environment in DB - should trigger AfterSave hook
+		env := models.Environment{Name: "hook-env", Status: "HEALTHY", VMID: 300}
+		if err := db.Create(&env).Error; err != nil {
+			t.Fatalf("Failed to create env: %v", err)
+		}
+
+		// Read second message - should be triggered by hook
+		var updateMsg map[string]interface{}
+		err = conn.ReadJSON(&updateMsg)
+		if err != nil {
+			t.Fatalf("Failed to read JSON update: %v", err)
+		}
+
+		nodes := updateMsg["nodes"].([]interface{})
+		// 2 static + 1 new env = 3
+		if len(nodes) != 3 {
+			t.Errorf("Expected 3 nodes after DB hook, got %d", len(nodes))
+		}
+	})
+
 	t.Run("Handle Client Disconnection", func(t *testing.T) {
 		_, v, server, wsURL := setup()
 		defer server.Close()
@@ -195,14 +230,11 @@ func TestStreamTopologyUpdates(t *testing.T) {
 
 		// Close connection
 		conn.Close()
-		
-		// We need to trigger a write failure or wait for context cancellation
-		// In Gin TestMode, context cancellation might not happen immediately
-		// But let's try to Notify to trigger a write on a closed connection
+
+		// Trigger a write on a closed connection to force unregister
 		v.Notify()
-		
+
 		time.Sleep(100 * time.Millisecond)
-		// Client should be removed after failed write or unregister
 		if len(v.Hub.clients) != 0 {
 			t.Errorf("Expected 0 registered clients, got %d", len(v.Hub.clients))
 		}
