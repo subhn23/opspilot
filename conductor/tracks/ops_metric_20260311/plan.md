@@ -16,10 +16,10 @@
 - [x] Task: Write tests for WebSocket streaming logic. (8760699)
 - [x] Task: Conductor - User Manual Verification 'Live Stats Streaming' (Protocol in workflow.md). (b58175b)
 
-## Phase 3: UI Integration [checkpoint: ]
+## Phase 3: UI Integration [checkpoint: e077efa]
 **Goal:** Display real-time and historical graphs on the dashboard.
 
 - [x] Task: Create UI components for live container stats (HTMX + Alpine.js or simple JS). (866e907)
 - [x] Task: Implement a historical metrics query API endpoint. (21da24e)
 - [x] Task: Final end-to-end verification of the full metrics pipeline. (d6f98b6)
-- [ ] Task: Conductor - User Manual Verification 'UI Integration' (Protocol in workflow.md).
+- [x] Task: Conductor - User Manual Verification 'UI Integration' (Protocol in workflow.md). (4af8e36)
