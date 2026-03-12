@@ -11,7 +11,7 @@
 ## Phase 2: Agentless SSH Deployments
 **Goal:** Allow deployments to raw Linux machines without OpsPilot/Proxmox.
 
-- [ ] Task: Create a UI page (`ui/templates/hosts.html`) to manage (Add/Edit/Delete) Static Hosts and input SSH keys.
+- [x] Task: Create a UI page (`ui/templates/hosts.html`) to manage (Add/Edit/Delete) Static Hosts and input SSH keys. (7008c85)
 - [ ] Task: Add API endpoints in `main.go` for managing `TargetHost` records.
 - [ ] Task: Update the Provisioning Wizard (`env_wizard.html`) to select from available `TargetHost` records instead of hardcoded strings.
 - [ ] Task: Refactor `Deployer.RemoteUp` to dynamically load the SSH configuration from the `TargetHost` record (decrypting the key) instead of relying on local environment variables.
