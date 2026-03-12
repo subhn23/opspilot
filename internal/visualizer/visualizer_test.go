@@ -87,24 +87,34 @@ func TestBuildTopology(t *testing.T) {
 		}
 		db.Create(&env)
 
-		deploy := models.Deployment{
-			EnvironmentID: env.ID,
-			CommitHash:    "deadbeef123",
-			Branch:        "main",
-			Status:        "SUCCESS",
-			DeployedAt:    time.Now(),
+		deploy1 := models.Deployment{
+		        EnvironmentID: env.ID,
+		        CommitHash:    "deadbeef123",
+		        Branch:        "main",
+		        Status:        "SUCCESS",
+		        DeployedAt:    time.Now().Add(-1 * time.Hour),
 		}
-		db.Create(&deploy)
+		db.Create(&deploy1)
+
+		deploy2 := models.Deployment{
+		        EnvironmentID: env.ID,
+		        CommitHash:    "cafebabe456",
+		        Branch:        "develop",
+		        Status:        "SUCCESS",
+		        DeployedAt:    time.Now(),
+		}
+		db.Create(&deploy2)
 
 		nodes, edges := v.BuildTopology()
-		// 2 static + 1 vm + 1 container = 4
-		if len(nodes) != 4 {
-			t.Errorf("Expected 4 nodes, got %d", len(nodes))
+		// 2 static + 1 vm + 2 containers = 5
+		if len(nodes) != 5 {
+		        t.Errorf("Expected 5 nodes, got %d", len(nodes))
 		}
-		// 1 static + 1 proxy + 1 docker = 3
-		if len(edges) != 3 {
-			t.Errorf("Expected 3 edges, got %d", len(edges))
+		// 1 static + 1 proxy + 2 docker = 4
+		if len(edges) != 4 {
+		        t.Errorf("Expected 4 edges, got %d", len(edges))
 		}
+
 	})
 }
 

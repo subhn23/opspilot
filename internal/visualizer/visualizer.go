@@ -162,18 +162,20 @@ func (v *OpsVisualizer) BuildTopology() ([]models.Node, []models.Edge) {
 		edges = append(edges, models.Edge{Source: "vip-01", Target: env.ID.String(), Label: "Proxy"})
 
 		// 3. Add individual Services (Containers) per environment
-		var latestDeploy models.Deployment
-		if err := v.DB.Where("environment_id = ? AND status = ?", env.ID, "SUCCESS").Order("deployed_at desc").First(&latestDeploy).Error; err == nil {
-			nodeID := fmt.Sprintf("svc-%d", latestDeploy.ID)
-			nodes = append(nodes, models.Node{
-				ID:       nodeID,
-				Label:    fmt.Sprintf("App (%s)", latestDeploy.CommitHash[:7]),
-				Type:     "container",
-				Status:   "Green",
-				Metadata: map[string]string{"hash": latestDeploy.CommitHash, "branch": latestDeploy.Branch, "container_id": latestDeploy.ContainerID},
-			})
-			edges = append(edges, models.Edge{Source: env.ID.String(), Target: nodeID, Label: "Docker"})
+		var deployments []models.Deployment
+		v.DB.Where("environment_id = ? AND status = ?", env.ID, "SUCCESS").Find(&deployments)
+		for _, deploy := range deployments {
+		        nodeID := fmt.Sprintf("svc-%d", deploy.ID)
+		        nodes = append(nodes, models.Node{
+		                ID:       nodeID,
+		                Label:    fmt.Sprintf("App (%s)", deploy.CommitHash[:7]),
+		                Type:     "container",
+		                Status:   "Green",
+		                Metadata: map[string]string{"hash": deploy.CommitHash, "branch": deploy.Branch, "container_id": deploy.ContainerID},
+		        })
+		        edges = append(edges, models.Edge{Source: env.ID.String(), Target: nodeID, Label: "Docker"})
 		}
+
 	}
 
 	return nodes, edges
