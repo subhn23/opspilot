@@ -7,6 +7,7 @@ import (
 	"net/http"
 	"opspilot/internal/auth"
 	"opspilot/internal/config"
+	"opspilot/internal/crypto"
 	"opspilot/internal/metrics"
 	"opspilot/internal/models"
 	"opspilot/internal/visualizer"
@@ -79,6 +80,66 @@ func main() {
 	// Target Hosts Page
 	r.GET("/hosts", func(c *gin.Context) {
 		c.HTML(http.StatusOK, "hosts.html", nil)
+	})
+
+	// Hosts API (HTMX)
+	r.GET("/api/hosts", func(c *gin.Context) {
+		var hosts []models.TargetHost
+		db.Order("name asc").Find(&hosts)
+
+		html := ""
+		for _, host := range hosts {
+			html += fmt.Sprintf(`
+				<tr class="hover:bg-slate-50 transition-colors">
+					<td class="px-6 py-4 font-medium text-slate-800">%s</td>
+					<td class="px-6 py-4"><span class="px-2 py-1 bg-slate-100 text-slate-600 rounded text-xs font-bold uppercase">%s</span></td>
+					<td class="px-6 py-4 text-slate-500 font-mono text-xs">%s</td>
+					<td class="px-6 py-4">
+						<button class="text-indigo-600 hover:text-indigo-900 font-bold">Edit</button>
+					</td>
+				</tr>`,
+				host.Name,
+				host.Type,
+				host.Endpoint,
+			)
+		}
+		if html == "" {
+			html = "<tr><td colspan='4' class='px-6 py-8 text-center text-slate-400'>No target hosts registered.</td></tr>"
+		}
+		c.Data(http.StatusOK, "text/html; charset=utf-8", []byte(html))
+	})
+
+	r.POST("/api/hosts", func(c *gin.Context) {
+		name := c.PostForm("name")
+		hostType := c.PostForm("type")
+		endpoint := c.PostForm("endpoint")
+		authData := c.PostForm("auth_data")
+
+		// Encrypt sensitive data if provided
+		encryptedAuth := ""
+		if authData != "" {
+			var err error
+			encryptedAuth, err = crypto.Encrypt(authData)
+			if err != nil {
+				c.Data(http.StatusInternalServerError, "text/html; charset=utf-8", []byte("<tr><td colspan='4' class='text-red-500 p-4'>Encryption failed</td></tr>"))
+				return
+			}
+		}
+
+		host := models.TargetHost{
+			Name:     name,
+			Type:     hostType,
+			Endpoint: endpoint,
+			AuthData: encryptedAuth,
+		}
+
+		if err := db.Create(&host).Error; err != nil {
+			c.Data(http.StatusInternalServerError, "text/html; charset=utf-8", []byte("<tr><td colspan='4' class='text-red-500 p-4'>Database error</td></tr>"))
+			return
+		}
+
+		// Return updated list
+		c.Redirect(http.StatusSeeOther, "/api/hosts")
 	})
 
 	// Audit API (HTMX)

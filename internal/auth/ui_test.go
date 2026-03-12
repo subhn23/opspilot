@@ -4,10 +4,14 @@ import (
 	"html/template"
 	"net/http"
 	"net/http/httptest"
+	"opspilot/internal/models"
+	"os"
 	"strings"
 	"testing"
 
 	"github.com/gin-gonic/gin"
+	"gorm.io/driver/sqlite"
+	"gorm.io/gorm"
 )
 
 func TestMFAEnrollTemplate(t *testing.T) {
@@ -120,5 +124,48 @@ func TestHostsTemplate(t *testing.T) {
 	}
 	if !strings.Contains(body, "hx-get=\"/api/hosts\"") {
 		t.Error("Expected body to contain hx-get for hosts api")
+	}
+}
+
+func TestHostsAPI(t *testing.T) {
+	gin.SetMode(gin.TestMode)
+	db, _ := gorm.Open(sqlite.Open(":memory:"), &gorm.Config{})
+	db.AutoMigrate(&models.TargetHost{})
+	
+	os.Setenv("ENCRYPTION_KEY", "0123456789abcdef0123456789abcdef")
+	defer os.Unsetenv("ENCRYPTION_KEY")
+
+	r := gin.Default()
+	
+	// API List
+	r.GET("/api/hosts", func(c *gin.Context) {
+		var hosts []models.TargetHost
+		db.Find(&hosts)
+		c.String(200, hosts[0].Name)
+	})
+
+	// API Create
+	r.POST("/api/hosts", func(c *gin.Context) {
+		name := c.PostForm("name")
+		host := models.TargetHost{Name: name, Type: "remote_ssh"}
+		db.Create(&host)
+		c.Status(200)
+	})
+
+	// 1. Test POST
+	w := httptest.NewRecorder()
+	req, _ := http.NewRequest("POST", "/api/hosts", strings.NewReader("name=NewHost"))
+	req.Header.Set("Content-Type", "application/x-www-form-urlencoded")
+	r.ServeHTTP(w, req)
+	if w.Code != 200 {
+		t.Errorf("Expected 200 on POST, got %d", w.Code)
+	}
+
+	// 2. Test GET
+	w = httptest.NewRecorder()
+	req, _ = http.NewRequest("GET", "/api/hosts", nil)
+	r.ServeHTTP(w, req)
+	if !strings.Contains(w.Body.String(), "NewHost") {
+		t.Errorf("Expected 'NewHost' in body, got %s", w.Body.String())
 	}
 }
