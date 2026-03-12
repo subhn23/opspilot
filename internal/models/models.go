@@ -131,6 +131,14 @@ type Edge struct {
 	Label  string `json:"label"` // HTTP, gRPC, DB
 }
 
+// FederationRequest represents an incoming deployment request from a Master node
+type FederationRequest struct {
+	EnvironmentName string `json:"environment_name"`
+	CommitHash      string `json:"commit_hash"`
+	Branch          string `json:"branch"`
+	TargetIP        string `json:"target_ip"`
+}
+
 // BeforeCreate hook to generate UUIDs
 func (u *User) BeforeCreate(tx *gorm.DB) (err error) {
 	if u.ID == uuid.Nil {

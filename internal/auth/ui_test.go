@@ -179,3 +179,42 @@ func TestHostsAPI(t *testing.T) {
 		t.Errorf("Expected 'NewHost' in body, got %s", w.Body.String())
 	}
 }
+
+func TestFederationAPI(t *testing.T) {
+	gin.SetMode(gin.TestMode)
+	os.Setenv("FEDERATION_TOKEN", "secret-token")
+	defer os.Unsetenv("FEDERATION_TOKEN")
+
+	r := gin.Default()
+	r.POST("/api/federation/deploy", func(c *gin.Context) {
+		token := c.GetHeader("X-Federation-Token")
+		if token != "secret-token" {
+			c.Status(401)
+			return
+		}
+		var req models.FederationRequest
+		if err := c.ShouldBindJSON(&req); err != nil {
+			c.Status(400)
+			return
+		}
+		c.JSON(200, gin.H{"status": "SUCCESS"})
+	})
+
+	// 1. Unauthorized
+	w := httptest.NewRecorder()
+	req, _ := http.NewRequest("POST", "/api/federation/deploy", strings.NewReader("{}"))
+	r.ServeHTTP(w, req)
+	if w.Code != 401 {
+		t.Errorf("Expected 401, got %d", w.Code)
+	}
+
+	// 2. Success
+	w = httptest.NewRecorder()
+	req, _ = http.NewRequest("POST", "/api/federation/deploy", strings.NewReader(`{"environment_name":"test","commit_hash":"abc"}`))
+	req.Header.Set("X-Federation-Token", "secret-token")
+	req.Header.Set("Content-Type", "application/json")
+	r.ServeHTTP(w, req)
+	if w.Code != 200 {
+		t.Errorf("Expected 200, got %d", w.Code)
+	}
+}

@@ -8,6 +8,7 @@ import (
 	"opspilot/internal/auth"
 	"opspilot/internal/config"
 	"opspilot/internal/crypto"
+	deployPkg "opspilot/internal/deploy"
 	"opspilot/internal/metrics"
 	"opspilot/internal/models"
 	"opspilot/internal/visualizer"
@@ -141,6 +142,59 @@ func main() {
 
 		// Return updated list
 		c.Redirect(http.StatusSeeOther, "/api/hosts")
+	})
+
+	// Federation API (Incoming from Master)
+	r.POST("/api/federation/deploy", func(c *gin.Context) {
+		token := c.GetHeader("X-Federation-Token")
+		if token == "" || token != os.Getenv("FEDERATION_TOKEN") {
+			c.JSON(http.StatusUnauthorized, gin.H{"error": "Invalid federation token"})
+			return
+		}
+
+		var req models.FederationRequest
+		if err := c.ShouldBindJSON(&req); err != nil {
+			c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid request body"})
+			return
+		}
+
+		// Find or create environment locally
+		var env models.Environment
+		if err := db.Where("name = ?", req.EnvironmentName).First(&env).Error; err != nil {
+			env = models.Environment{
+				Name: req.EnvironmentName,
+				Type: "federated",
+			}
+			db.Create(&env)
+		}
+
+		// Create Deployment
+		deploy := models.Deployment{
+			EnvironmentID: env.ID,
+			CommitHash:    req.CommitHash,
+			Branch:        req.Branch,
+			Status:        "PENDING",
+		}
+		db.Create(&deploy)
+
+		// Execute Deployment (Async or Sync? For simplicity, we'll run BuildAndPush + RemoteUp sync here)
+		deployer := deployPkg.NewDeployer(db)
+		
+		ctx := c.Request.Context()
+		if err := deployer.BuildAndPush(ctx, &deploy); err != nil {
+			c.JSON(http.StatusInternalServerError, gin.H{"error": "Build failed", "logs": deploy.Logs})
+			return
+		}
+
+		if err := deployer.RemoteUp(ctx, &deploy, req.TargetIP); err != nil {
+			c.JSON(http.StatusInternalServerError, gin.H{"error": "Deploy failed", "logs": deploy.Logs})
+			return
+		}
+
+		c.JSON(http.StatusOK, gin.H{
+			"status": "SUCCESS",
+			"logs":   deploy.Logs,
+		})
 	})
 
 	// Audit API (HTMX)
