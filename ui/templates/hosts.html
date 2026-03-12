@@ -1,0 +1,118 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Target Hosts | OpsPilot</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://unpkg.com/htmx.org@1.9.10"></script>
+</head>
+<body class="bg-slate-50 font-sans text-slate-900" x-data="{ sidebarOpen: false }">
+    <div class="flex h-screen overflow-hidden">
+        
+        <!-- Mobile Sidebar Overlay -->
+        <div x-show="sidebarOpen" @click="sidebarOpen = false" class="fixed inset-0 z-20 bg-black bg-opacity-50 lg:hidden"></div>
+
+        <!-- Sidebar -->
+        <aside :class="sidebarOpen ? 'translate-x-0' : '-translate-x-full'" class="fixed inset-y-0 left-0 z-30 w-64 bg-slate-900 text-white transition-transform duration-300 transform lg:translate-x-0 lg:static lg:inset-0">
+            <div class="flex items-center justify-center h-16 bg-indigo-600">
+                <span class="text-xl font-bold uppercase tracking-wider">OpsPilot</span>
+            </div>
+            <nav class="mt-4 px-4 space-y-2">
+                <a href="/" class="flex items-center p-3 rounded-lg hover:bg-slate-800 transition-colors">
+                    <span class="ml-3">Dashboard</span>
+                </a>
+                <a href="/hosts" class="flex items-center p-3 rounded-lg bg-indigo-500 bg-opacity-25 border-l-4 border-indigo-500">
+                    <span class="ml-3">Infrastructure Hosts</span>
+                </a>
+                <a href="/environments/new" class="flex items-center p-3 rounded-lg hover:bg-slate-800 transition-colors">
+                    <span class="ml-3">Provision VM</span>
+                </a>
+                <a href="/audit" class="flex items-center p-3 rounded-lg hover:bg-slate-800 transition-colors">
+                    <span class="ml-3">Audit Logs</span>
+                </a>
+                <a href="#" class="flex items-center p-3 rounded-lg hover:bg-slate-800 transition-colors">
+                    <span class="ml-3">Deployments</span>
+                </a>
+            </nav>
+        </aside>
+
+        <!-- Main Content -->
+        <div class="flex-1 flex flex-col overflow-hidden">
+            <header class="h-16 bg-white border-b border-slate-200 flex items-center justify-between px-4 lg:px-8">
+                <button @click="sidebarOpen = true" class="p-2 rounded-md lg:hidden text-slate-600 hover:bg-slate-100">
+                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16m-7 6h7"></path></svg>
+                </button>
+                <div class="text-sm font-medium text-slate-500 uppercase tracking-tight">Host Management</div>
+            </header>
+
+            <main class="flex-1 overflow-y-auto p-4 lg:p-8">
+                <div class="flex justify-between items-center mb-8">
+                    <div>
+                        <h1 class="text-2xl font-bold text-slate-800">Target Infrastructure Hosts</h1>
+                        <p class="text-slate-500">Manage physical servers, Proxmox nodes, or federated OpsPilot instances.</p>
+                    </div>
+                </div>
+
+                <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+                    <!-- Host List -->
+                    <div class="lg:col-span-2">
+                        <div class="bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden">
+                            <table class="w-full text-left border-collapse">
+                                <thead class="bg-slate-50 text-slate-500 uppercase text-xs font-bold">
+                                    <tr>
+                                        <th class="px-6 py-3">Name</th>
+                                        <th class="px-6 py-3">Type</th>
+                                        <th class="px-6 py-3">Endpoint</th>
+                                        <th class="px-6 py-3">Actions</th>
+                                    </tr>
+                                </thead>
+                                <tbody class="divide-y divide-slate-100 text-sm" id="hosts-table-body" hx-get="/api/hosts" hx-trigger="load">
+                                    <tr>
+                                        <td colspan="4" class="px-6 py-8 text-center text-slate-400 italic">Loading hosts...</td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+
+                    <!-- Add Host Form -->
+                    <div class="lg:col-span-1">
+                        <div class="bg-white rounded-xl shadow-sm border border-slate-200 p-6">
+                            <h2 class="text-lg font-bold text-slate-800 mb-4">Add New Target Host</h2>
+                            <form hx-post="/api/hosts" hx-target="#hosts-table-body" hx-swap="innerHTML" class="space-y-4">
+                                <div>
+                                    <label class="block text-sm font-medium text-slate-700 mb-1">Host Name</label>
+                                    <input type="text" name="name" placeholder="e.g. Production Host 1" required
+                                        class="w-full px-4 py-2 rounded-lg border border-slate-300 focus:ring-2 focus:ring-indigo-500 outline-none transition-all">
+                                </div>
+                                <div>
+                                    <label class="block text-sm font-medium text-slate-700 mb-1">Type</label>
+                                    <select name="type" class="w-full px-4 py-2 rounded-lg border border-slate-300 focus:ring-2 focus:ring-indigo-500 outline-none transition-all">
+                                        <option value="local_proxmox">Local Proxmox</option>
+                                        <option value="remote_ssh">Remote SSH (Static)</option>
+                                        <option value="federated_opspilot">Federated OpsPilot API</option>
+                                    </select>
+                                </div>
+                                <div>
+                                    <label class="block text-sm font-medium text-slate-700 mb-1">Endpoint (IP or URL)</label>
+                                    <input type="text" name="endpoint" placeholder="192.168.1.100" required
+                                        class="w-full px-4 py-2 rounded-lg border border-slate-300 focus:ring-2 focus:ring-indigo-500 outline-none transition-all">
+                                </div>
+                                <div>
+                                    <label class="block text-sm font-medium text-slate-700 mb-1">Auth Data (SSH Key/Token)</label>
+                                    <textarea name="auth_data" rows="4" placeholder="-----BEGIN OPENSSH PRIVATE KEY-----"
+                                        class="w-full px-4 py-2 rounded-lg border border-slate-300 focus:ring-2 focus:ring-indigo-500 outline-none transition-all font-mono text-xs"></textarea>
+                                </div>
+                                <button type="submit" class="w-full bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-2 px-4 rounded-lg transition-colors">
+                                    Register Host
+                                </button>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+            </main>
+        </div>
+    </div>
+</body>
+</html>

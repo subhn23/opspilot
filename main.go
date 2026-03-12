@@ -76,6 +76,11 @@ func main() {
 		c.HTML(http.StatusOK, "audit_viewer.html", nil)
 	})
 
+	// Target Hosts Page
+	r.GET("/hosts", func(c *gin.Context) {
+		c.HTML(http.StatusOK, "hosts.html", nil)
+	})
+
 	// Audit API (HTMX)
 	r.GET("/api/audit", func(c *gin.Context) {
 		var logs []models.AuditLog

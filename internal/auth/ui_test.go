@@ -96,3 +96,29 @@ func TestEnvWizardTemplate(t *testing.T) {
 		t.Error("Expected body to contain hx-post for environments api")
 	}
 }
+
+func TestHostsTemplate(t *testing.T) {
+	gin.SetMode(gin.TestMode)
+	r := gin.Default()
+	r.LoadHTMLGlob("../../ui/templates/*")
+
+	r.GET("/hosts", func(c *gin.Context) {
+		c.HTML(http.StatusOK, "hosts.html", nil)
+	})
+
+	w := httptest.NewRecorder()
+	req, _ := http.NewRequest("GET", "/hosts", nil)
+	r.ServeHTTP(w, req)
+
+	if w.Code != http.StatusOK {
+		t.Errorf("Expected status 200, got %d", w.Code)
+	}
+
+	body := w.Body.String()
+	if !strings.Contains(body, "Target Infrastructure Hosts") {
+		t.Error("Expected body to contain 'Target Infrastructure Hosts'")
+	}
+	if !strings.Contains(body, "hx-get=\"/api/hosts\"") {
+		t.Error("Expected body to contain hx-get for hosts api")
+	}
+}
