@@ -17,6 +17,7 @@ OpsPilot aims to provide a "Kubernetes-like" experience for developers and IT te
 - **Observability & Visualization:** Real-time monitoring and an interactive topology map for clear stack status.
 
 ## Key Features
+- **Distributed Control Plane:** Ability to manage agentless remote SSH hosts and orchestrate multi-datacenter setups via OpsPilot Federation (Master-Worker APIs).
 - **Audit & Identity:** Robust authentication with JWT and TOTP MFA, coupled with a granular RBAC system and immutable action logging.
 - **OpsProxy & SSL:** Native Go-based reverse proxy with integrated SSL certificate management.
 - **Automated Windows DNS:** Automated management of A records via PowerShell over SSH, ensuring consistent internal naming.

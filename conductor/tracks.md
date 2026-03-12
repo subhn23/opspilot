@@ -11,3 +11,15 @@ This file tracks all major tracks for the project. Each track has its own detail
 ## Phase 3: Governance & Operations (Visibility & Safety)
 - [x] **Track: 3.3: Security & Backup Resilience**
   *Link: [./tracks/security_backup_20260311/](./tracks/security_backup_20260311/)*
+
+---
+
+## Final Phase: Production-Ready Consolidation
+- [~] **Track: Production-Ready Consolidation**
+  *Link: [./tracks/production_ready_consolidation/](./tracks/production_ready_consolidation/)*
+
+---
+
+## Future Capabilities: Distributed Orchestration
+- [ ] **Track: Remote Host & Federation Management**
+  *Link: [./tracks/remote_federation/](./tracks/remote_federation/)*
