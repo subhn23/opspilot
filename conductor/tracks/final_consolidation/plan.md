@@ -5,7 +5,7 @@
 
 - [x] Task: Implement the SSH-based Windows DNS client in `internal/dns/dns.go`. (711c5ce)
 - [x] Task: Update `internal/metrics/metrics.go` to use the real Docker API for stats. (390c0da)
-- [ ] Task: Implement `PushToVictoriaMetrics` in `internal/metrics/collector.go`.
+- [x] Task: Implement `PushToVictoriaMetrics` in `internal/metrics/collector.go`. (b8abe7e)
 - [ ] Task: Update the Topology Map to include active Docker containers within each VM.
 
 ## Phase 2: Production Resilience & UI Finalization
