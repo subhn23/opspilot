@@ -97,3 +97,29 @@ func TestSeedSystemData(t *testing.T) {
 		t.Errorf("Expected 3 roles after second seed, got %d", roleCount)
 	}
 }
+
+func TestTargetHostModel(t *testing.T) {
+	db, _ := gorm.Open(sqlite.Open(":memory:"), &gorm.Config{})
+	db.AutoMigrate(&TargetHost{})
+
+	host := TargetHost{
+		Name:     "Test Host",
+		Type:     "remote_ssh",
+		Endpoint: "1.2.3.4",
+		AuthData: "encrypted-key",
+	}
+
+	if err := db.Create(&host).Error; err != nil {
+		t.Fatalf("Failed to create TargetHost: %v", err)
+	}
+
+	if host.ID == uuid.Nil {
+		t.Error("TargetHost ID was not generated")
+	}
+
+	var saved TargetHost
+	db.First(&saved, host.ID)
+	if saved.Name != "Test Host" {
+		t.Errorf("Expected name 'Test Host', got %s", saved.Name)
+	}
+}

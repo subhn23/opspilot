@@ -77,6 +77,17 @@ type Environment struct {
 	UpdatedAt time.Time
 }
 
+// TargetHost represents a physical or virtual machine that can host environments
+type TargetHost struct {
+	ID        uuid.UUID `gorm:"type:uuid;primaryKey"`
+	Name      string    `gorm:"uniqueIndex;not null"`
+	Type      string    `gorm:"not null"` // local_proxmox, remote_ssh, federated_opspilot
+	Endpoint  string    // IP address or OpsPilot URL
+	AuthData  string    `gorm:"type:text"` // Encrypted SSH key or API token
+	CreatedAt time.Time
+	UpdatedAt time.Time
+}
+
 // Deployment tracks the history of code delivery to environments
 type Deployment struct {
 	ID            uint      `gorm:"primaryKey"`
@@ -136,6 +147,13 @@ func (r *Role) BeforeCreate(tx *gorm.DB) (err error) {
 func (e *Environment) BeforeCreate(tx *gorm.DB) (err error) {
 	if e.ID == uuid.Nil {
 		e.ID = uuid.New()
+	}
+	return
+}
+
+func (t *TargetHost) BeforeCreate(tx *gorm.DB) (err error) {
+	if t.ID == uuid.Nil {
+		t.ID = uuid.New()
 	}
 	return
 }

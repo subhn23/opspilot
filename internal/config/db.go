@@ -35,7 +35,7 @@ func InitDB(dialector gorm.Dialector) *gorm.DB {
 
 // GetDialector returns a GORM dialector for PostgreSQL based on environment variables
 func GetDialector() gorm.Dialector {
-	host := getEnv("DB_HOST", "localhost")
+	host := getEnv("DB_HOST", "192.168.25.26")
 	user := getEnv("DB_USER", "postgres")
 	pass := getEnv("DB_PASS", "postgres")
 	name := getEnv("DB_NAME", "opspilot")
@@ -56,6 +56,7 @@ func AutoMigrate(db *gorm.DB) error {
 		&models.Permission{},
 		&models.Certificate{},
 		&models.ProxyRoute{},
+		&models.TargetHost{},
 		&models.Environment{},
 		&models.Deployment{},
 		&models.AuditLog{},
