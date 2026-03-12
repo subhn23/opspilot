@@ -63,9 +63,11 @@ func (t *TFEngine) Provision(ctx context.Context, env *models.Environment) error
 
 	// Dynamic variables for Proxmox provider
 	vars := map[string]interface{}{
-		"vm_name":     env.Name,
-		"target_node": env.HostNode,
-		"vm_id":       env.VMID,
+		"vm_name":             env.Name,
+		"target_node":         env.HostNode,
+		"vm_id":               env.VMID,
+		"pm_api_token_id":     os.Getenv("PM_API_TOKEN_ID"),
+		"pm_api_token_secret": os.Getenv("PM_API_TOKEN_SECRET"),
 	}
 
 	var varOpts []tfexec.ApplyOption

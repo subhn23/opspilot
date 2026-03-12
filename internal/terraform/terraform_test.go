@@ -83,6 +83,11 @@ func TestProvision(t *testing.T) {
 	}
 	db.Create(env)
 
+	os.Setenv("PM_API_TOKEN_ID", "test-token-id")
+	os.Setenv("PM_API_TOKEN_SECRET", "test-token-secret")
+	defer os.Unsetenv("PM_API_TOKEN_ID")
+	defer os.Unsetenv("PM_API_TOKEN_SECRET")
+
 	err := engine.Provision(context.Background(), env)
 
 	if err != nil {
