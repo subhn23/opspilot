@@ -8,8 +8,10 @@ import (
 	"opspilot/internal/models"
 	"os"
 	"os/exec"
+	"time"
 
 	"github.com/google/uuid"
+	"golang.org/x/crypto/ssh"
 	"gorm.io/gorm"
 )
 
@@ -64,8 +66,42 @@ type RealSSHClient struct {
 }
 
 func (s *RealSSHClient) RunCommand(ctx context.Context, addr, command string) (string, error) {
-	// Placeholder for actual SSH logic using golang.org/x/crypto/ssh
-	return "", fmt.Errorf("SSH execution not yet fully implemented")
+	if s.PrivateKey == "" {
+		return "", fmt.Errorf("SSH private key not provided")
+	}
+
+	signer, err := ssh.ParsePrivateKey([]byte(s.PrivateKey))
+	if err != nil {
+		return "", fmt.Errorf("failed to parse private key: %w", err)
+	}
+
+	config := &ssh.ClientConfig{
+		User: s.User,
+		Auth: []ssh.AuthMethod{
+			ssh.PublicKeys(signer),
+		},
+		HostKeyCallback: ssh.InsecureIgnoreHostKey(), // For dynamic VMs, ideally we'd use a known hosts file
+		Timeout:         10 * time.Second,
+	}
+
+	client, err := ssh.Dial("tcp", addr, config)
+	if err != nil {
+		return "", fmt.Errorf("failed to dial SSH: %w", err)
+	}
+	defer client.Close()
+
+	session, err := client.NewSession()
+	if err != nil {
+		return "", fmt.Errorf("failed to create session: %w", err)
+	}
+	defer session.Close()
+
+	output, err := session.CombinedOutput(command)
+	if err != nil {
+		return string(output), fmt.Errorf("failed to run command: %w", err)
+	}
+
+	return string(output), nil
 }
 
 type Deployer struct {
@@ -81,7 +117,10 @@ func NewDeployer(db *gorm.DB) *Deployer {
 	return &Deployer{
 		DB:      db,
 		Scanner: &RealScanner{},
-		SSH:     &RealSSHClient{User: "root"},
+		SSH: &RealSSHClient{
+			User:       getEnv("SSH_USER", "root"),
+			PrivateKey: os.Getenv("SSH_PRIVATE_KEY"),
+		},
 		Git:     &RealGitClient{},
 		Docker:  &RealDockerClient{},
 		RepoURL: os.Getenv("PROJECT_REPO_URL"),
@@ -198,4 +237,11 @@ func (d *Deployer) RemoteUp(ctx context.Context, deploy *models.Deployment, targ
 func (d *Deployer) updateStatus(deploy *models.Deployment, status string) {
 	deploy.Status = status
 	d.DB.Save(deploy)
+}
+
+func getEnv(key, fallback string) string {
+	if value, ok := os.LookupEnv(key); ok {
+		return value
+	}
+	return fallback
 }
