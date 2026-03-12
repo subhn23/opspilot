@@ -150,3 +150,39 @@ func TestEnvironmentTargetHostLink(t *testing.T) {
 		t.Errorf("Expected associated host name 'Main Server', got %s", savedEnv.TargetHost.Name)
 	}
 }
+
+func TestHostNodeMigration(t *testing.T) {
+	db, _ := gorm.Open(sqlite.Open(":memory:"), &gorm.Config{})
+	db.AutoMigrate(&TargetHost{}, &Environment{})
+
+	// Create legacy environments
+	env1 := Environment{Name: "Legacy 1", HostNode: "host1", VMID: 1001}
+	env2 := Environment{Name: "Legacy 2", HostNode: "host2", VMID: 1002}
+	env3 := Environment{Name: "Legacy 3", HostNode: "host1", VMID: 1003}
+	db.Create(&env1)
+	db.Create(&env2)
+	db.Create(&env3)
+
+	// Run migration
+	MigrateHostNodesToTargetHosts(db)
+
+	// Verify TargetHosts were created
+	var hosts []TargetHost
+	db.Find(&hosts)
+	if len(hosts) != 2 {
+		t.Errorf("Expected 2 TargetHosts (host1, host2), got %d", len(hosts))
+	}
+
+	// Verify Environments are linked
+	var updatedEnv1 Environment
+	db.Preload("TargetHost").First(&updatedEnv1, env1.ID)
+	if updatedEnv1.TargetHostID == nil || updatedEnv1.TargetHost.Name != "host1" {
+		t.Error("env1 was not linked correctly to host1")
+	}
+
+	var updatedEnv2 Environment
+	db.Preload("TargetHost").First(&updatedEnv2, env2.ID)
+	if updatedEnv2.TargetHostID == nil || updatedEnv2.TargetHost.Name != "host2" {
+		t.Error("env2 was not linked correctly to host2")
+	}
+}

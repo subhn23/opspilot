@@ -63,3 +63,38 @@ func SeedSystemData(db *gorm.DB) {
 
 	log.Println("Seeding completed: Default roles created.")
 }
+
+// MigrateHostNodesToTargetHosts converts legacy HostNode strings into TargetHost records
+func MigrateHostNodesToTargetHosts(db *gorm.DB) {
+	var envs []Environment
+	db.Where("target_host_id IS NULL AND host_node != ''").Find(&envs)
+
+	if len(envs) == 0 {
+		return
+	}
+
+	log.Printf("Migrating %d environments to TargetHosts...", len(envs))
+
+	hosts := make(map[string]*TargetHost)
+
+	for i := range envs {
+		nodeName := envs[i].HostNode
+		if hosts[nodeName] == nil {
+			var host TargetHost
+			if err := db.Where("name = ?", nodeName).First(&host).Error; err != nil {
+				// Create new TargetHost
+				host = TargetHost{
+					Name: nodeName,
+					Type: "local_proxmox", // Assume local_proxmox for legacy nodes
+				}
+				db.Create(&host)
+			}
+			hosts[nodeName] = &host
+		}
+
+		envs[i].TargetHostID = &hosts[nodeName].ID
+		db.Save(&envs[i])
+	}
+
+	log.Println("Migration completed.")
+}
