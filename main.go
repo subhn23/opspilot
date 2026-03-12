@@ -96,6 +96,42 @@ func main() {
 		c.Data(http.StatusOK, "text/html; charset=utf-8", []byte(html))
 	})
 
+	// Environment Wizard Page
+	r.GET("/environments/new", func(c *gin.Context) {
+		c.HTML(http.StatusOK, "env_wizard.html", nil)
+	})
+
+	// Environment API (HTMX Provisioning)
+	r.POST("/api/environments", func(c *gin.Context) {
+		name := c.PostForm("name")
+		envType := c.PostForm("type")
+		hostNode := c.PostForm("host_node")
+
+		// Create record in DB
+		env := models.Environment{
+			Name:     name,
+			Type:     envType,
+			HostNode: hostNode,
+			Status:   "PROVISIONING",
+		}
+
+		if err := db.Create(&env).Error; err != nil {
+			c.Data(http.StatusInternalServerError, "text/html; charset=utf-8", []byte(fmt.Sprintf(`
+				<div class="mt-6 p-4 bg-red-100 border border-red-200 text-red-700 rounded-lg">
+					<p class="font-bold">Error Initializing</p>
+					<p class="text-sm">%%s</p>
+				</div>`, err.Error())))
+			return
+		}
+
+		c.Data(http.StatusOK, "text/html; charset=utf-8", []byte(fmt.Sprintf(`
+			<div class="mt-6 p-4 bg-green-100 border border-green-200 text-green-700 rounded-lg">
+				<p class="font-bold">Success!</p>
+				<p class="text-sm">Environment <strong>%%s</strong> is now being provisioned on <strong>%%s</strong>.</p>
+				<a href="/" class="mt-2 inline-block text-xs font-bold uppercase tracking-wider underline">Go to Dashboard</a>
+			</div>`, name, hostNode)))
+	})
+
 	// Topology API (HTMX support)
 	r.GET("/api/topology", func(c *gin.Context) {
 		nodes, edges := viz.BuildTopology()
