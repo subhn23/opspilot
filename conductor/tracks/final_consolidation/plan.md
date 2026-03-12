@@ -1,6 +1,6 @@
 # Implementation Plan: Final Production Consolidation
 
-## Phase 1: Network & Observability Depth
+## Phase 1: Network & Observability Depth [checkpoint: 66b4aef]
 **Goal:** Connect monitoring sinks and external DNS providers.
 
 - [x] Task: Implement the SSH-based Windows DNS client in `internal/dns/dns.go`. (711c5ce)
