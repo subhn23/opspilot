@@ -13,5 +13,5 @@
 
 - [x] Task: Configure `archive_command` for Postgres WAL archiving on OpsControl VMs. (e2f4ca9)
 - [x] Task: Finalize the background Registry Autosync worker between Host 1 and Host 2. (50031ad)
-- [ ] Task: Build the Live Logs UI component for real-time streaming in the browser.
+- [x] Task: Build the Live Logs UI component for real-time streaming in the browser. (8849b9b)
 - [ ] Task: Verify the minimal firewall configuration for port 80/443 routing.
