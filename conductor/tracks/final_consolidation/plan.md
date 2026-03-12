@@ -12,6 +12,6 @@
 **Goal:** Finalize backup, sync, and real-time monitoring.
 
 - [x] Task: Configure `archive_command` for Postgres WAL archiving on OpsControl VMs. (e2f4ca9)
-- [ ] Task: Finalize the background Registry Autosync worker between Host 1 and Host 2.
+- [x] Task: Finalize the background Registry Autosync worker between Host 1 and Host 2. (50031ad)
 - [ ] Task: Build the Live Logs UI component for real-time streaming in the browser.
 - [ ] Task: Verify the minimal firewall configuration for port 80/443 routing.
