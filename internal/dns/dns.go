@@ -6,48 +6,43 @@ import (
 	"log"
 	"net"
 	"opspilot/internal/audit"
+	"opspilot/internal/ssh"
 	"time"
 
 	"github.com/google/uuid"
 	"gorm.io/gorm"
-)
+	)
 
-// SSHClient abstracts remote command execution
-type SSHClient interface {
-	RunCommand(ctx context.Context, addr, command string) (string, error)
-}
-
-// Resolver abstracts DNS lookup logic
-type Resolver interface {
+	// Resolver abstracts DNS lookup logic
+	type Resolver interface {
 	LookupIP(ctx context.Context, network, host string) ([]net.IP, error)
-}
+	}
 
-// DefaultResolver uses the standard net package
-type DefaultResolver struct{}
+	// DefaultResolver uses the standard net package
+	type DefaultResolver struct{}
 
-func (r *DefaultResolver) LookupIP(ctx context.Context, network, host string) ([]net.IP, error) {
+	func (r *DefaultResolver) LookupIP(ctx context.Context, network, host string) ([]net.IP, error) {
 	return net.DefaultResolver.LookupIP(ctx, network, host)
-}
+	}
 
-type DNSManager struct {
+	type DNSManager struct {
 	DB         *gorm.DB
 	ServerAddr string
 	ZoneName   string
-	SSH        SSHClient
+	SSH        ssh.Client
 	Resolver   Resolver
-}
+	}
 
-// NewDNSManager creates a new DNSManager
-func NewDNSManager(db *gorm.DB, serverAddr, zoneName string, ssh SSHClient) *DNSManager {
+	// NewDNSManager creates a new DNSManager
+	func NewDNSManager(db *gorm.DB, serverAddr, zoneName string, sshClient ssh.Client) *DNSManager {
 	return &DNSManager{
 		DB:         db,
 		ServerAddr: serverAddr,
 		ZoneName:   zoneName,
-		SSH:        ssh,
+		SSH:        sshClient,
 		Resolver:   &DefaultResolver{},
 	}
-}
-
+	}
 // UpdateRecordA adds or updates an A record in Windows DNS via PowerShell over SSH
 func (m *DNSManager) UpdateRecordA(ctx context.Context, hostname string, ip string) error {
 	log.Printf("DNS: Updating %s.%s -> %s on %s", hostname, m.ZoneName, ip, m.ServerAddr)

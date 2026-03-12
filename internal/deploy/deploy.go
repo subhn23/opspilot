@@ -7,12 +7,11 @@ import (
 	"opspilot/internal/audit"
 	"opspilot/internal/crypto"
 	"opspilot/internal/models"
+	"opspilot/internal/ssh"
 	"os"
 	"os/exec"
-	"time"
 
 	"github.com/google/uuid"
-	"golang.org/x/crypto/ssh"
 	"gorm.io/gorm"
 )
 
@@ -62,55 +61,6 @@ func (d *RealDockerClient) Push(ctx context.Context, tag string) error {
 }
 
 // RealSSHClient uses golang.org/x/crypto/ssh to execute remote commands
-type RealSSHClient struct {
-	User       string
-	PrivateKey string
-}
-
-func (s *RealSSHClient) RunCommand(ctx context.Context, addr, command string) (string, error) {
-	if s.PrivateKey == "" {
-		return "", fmt.Errorf("SSH private key not provided")
-	}
-
-	signer, err := ssh.ParsePrivateKey([]byte(s.PrivateKey))
-	if err != nil {
-		return "", fmt.Errorf("failed to parse private key: %w", err)
-	}
-
-	config := &ssh.ClientConfig{
-		User: s.User,
-		Auth: []ssh.AuthMethod{
-			ssh.PublicKeys(signer),
-		},
-		HostKeyCallback: ssh.InsecureIgnoreHostKey(),
-		Timeout:         10 * time.Second,
-	}
-
-	client, err := ssh.Dial("tcp", addr, config)
-	if err != nil {
-		return "", fmt.Errorf("failed to dial SSH: %w", err)
-	}
-	defer client.Close()
-
-	session, err := client.NewSession()
-	if err != nil {
-		return "", fmt.Errorf("failed to create session: %w", err)
-	}
-	defer session.Close()
-
-	output, err := session.CombinedOutput(command)
-	if err != nil {
-		return string(output), fmt.Errorf("failed to run command: %w", err)
-	}
-
-	return string(output), nil
-}
-
-func (s *RealSSHClient) Configure(user, privateKey string) {
-	s.User = user
-	s.PrivateKey = privateKey
-}
-
 type Deployer struct {
 	DB         *gorm.DB
 	Scanner    Scanner
@@ -125,7 +75,7 @@ func NewDeployer(db *gorm.DB) *Deployer {
 	return &Deployer{
 		DB:      db,
 		Scanner: &RealScanner{},
-		SSH: &RealSSHClient{
+		SSH: &ssh.RealSSHClient{
 			User:       getEnv("SSH_USER", "root"),
 			PrivateKey: os.Getenv("SSH_PRIVATE_KEY"),
 		},

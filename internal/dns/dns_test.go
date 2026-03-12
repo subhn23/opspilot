@@ -22,6 +22,7 @@ func (m *MockSSHClient) RunCommand(ctx context.Context, addr, command string) (s
 	return m.MockOutput, m.MockErr
 }
 
+func (m *MockSSHClient) Configure(user, privateKey string) {}
 type MockResolver struct {
 	MockIPs []net.IP
 	MockErr error
