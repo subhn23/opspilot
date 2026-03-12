@@ -137,6 +137,34 @@ func TestHostsTemplate(t *testing.T) {
 	}
 }
 
+func TestLiveLogsTemplate(t *testing.T) {
+	gin.SetMode(gin.TestMode)
+	r := gin.Default()
+	r.LoadHTMLGlob("../../ui/templates/*")
+
+	r.GET("/logs/:id", func(c *gin.Context) {
+		c.HTML(http.StatusOK, "live_logs.html", gin.H{
+			"ContainerID": "test-container-123",
+		})
+	})
+
+	w := httptest.NewRecorder()
+	req, _ := http.NewRequest("GET", "/logs/test-container-123", nil)
+	r.ServeHTTP(w, req)
+
+	if w.Code != http.StatusOK {
+		t.Errorf("Expected status 200, got %d", w.Code)
+	}
+
+	body := w.Body.String()
+	if !strings.Contains(body, "Live Logs:") {
+		t.Error("Expected body to contain 'Live Logs:'")
+	}
+	if !strings.Contains(body, "test-container-123") {
+		t.Error("Expected body to contain container ID")
+	}
+}
+
 func TestHostsAPI(t *testing.T) {
 	gin.SetMode(gin.TestMode)
 	db, _ := gorm.Open(sqlite.Open(":memory:"), &gorm.Config{})

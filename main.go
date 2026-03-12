@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"html/template"
+	"io"
 	"log"
 	"net/http"
 	"opspilot/internal/auth"
@@ -18,8 +19,15 @@ import (
 
 	"github.com/gin-gonic/gin"
 	"github.com/google/uuid"
+	"github.com/gorilla/websocket"
 	"github.com/moby/moby/client"
 )
+
+var upgrader = websocket.Upgrader{
+	ReadBufferSize:  1024,
+	WriteBufferSize: 1024,
+	CheckOrigin:     func(r *http.Request) bool { return true },
+}
 
 func main() {
 	// 1. Initialize Database
@@ -44,6 +52,9 @@ func main() {
 	syncService := &deployPkg.RealImageService{Docker: dockerCli}
 	registrySync := deployPkg.NewRegistrySync(db, "host1:5000", "host2:5000", syncService)
 	go registrySync.StartWorker(context.Background())
+
+	// Initialize Deployer for general use
+	deployer := deployPkg.NewDeployer(db)
 
 	// 5. Initialize Visualizer
 	viz := visualizer.NewOpsVisualizer(db)
@@ -88,6 +99,13 @@ func main() {
 	// Target Hosts Page
 	r.GET("/hosts", func(c *gin.Context) {
 		c.HTML(http.StatusOK, "hosts.html", nil)
+	})
+
+	// Live Logs Page
+	r.GET("/logs/:id", func(c *gin.Context) {
+		c.HTML(http.StatusOK, "live_logs.html", gin.H{
+			"ContainerID": c.Param("id"),
+		})
 	})
 
 	// Hosts API (HTMX)
@@ -308,6 +326,41 @@ func main() {
 
 	// Live Metrics WebSocket
 	r.GET("/ws/metrics/:id", streamer.StreamContainerStats)
+
+	// Live Logs WebSocket
+	r.GET("/ws/logs/:id", func(c *gin.Context) {
+		id := c.Param("id")
+		conn, err := upgrader.Upgrade(c.Writer, c.Request, nil)
+		if err != nil {
+			log.Printf("Log WebSocket upgrade failed: %v", err)
+			return
+		}
+		defer conn.Close()
+
+		logs, err := deployer.StreamContainerLogs(c.Request.Context(), id)
+		if err != nil {
+			conn.WriteJSON(gin.H{"error": err.Error()})
+			return
+		}
+		defer logs.Close()
+
+		// Stream logs to client
+		buf := make([]byte, 4096)
+		for {
+			n, err := logs.Read(buf)
+			if n > 0 {
+				if err := conn.WriteMessage(websocket.TextMessage, buf[:n]); err != nil {
+					return
+				}
+			}
+			if err != nil {
+				if err != io.EOF {
+					log.Printf("Log stream error: %v", err)
+				}
+				break
+			}
+		}
+	})
 
 	// Historical Metrics API
 	r.GET("/api/metrics/history/:id", func(c *gin.Context) {

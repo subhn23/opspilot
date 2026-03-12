@@ -3,6 +3,7 @@ package deploy
 import (
 	"context"
 	"fmt"
+	"io"
 	"log"
 	"opspilot/internal/audit"
 	"opspilot/internal/crypto"
@@ -10,8 +11,11 @@ import (
 	"opspilot/internal/ssh"
 	"os"
 	"os/exec"
+	"time"
 
 	"github.com/google/uuid"
+	"github.com/moby/moby/api/types/container"
+	"github.com/moby/moby/client"
 	"gorm.io/gorm"
 )
 
@@ -43,7 +47,9 @@ func (g *RealGitClient) Checkout(ctx context.Context, targetDir, commitHash stri
 	return cmd.Run()
 }
 
-type RealDockerClient struct{}
+type RealDockerClient struct {
+	Client *client.Client
+}
 
 func (d *RealDockerClient) Login(ctx context.Context, user, pass, registry string) error {
 	cmd := exec.CommandContext(ctx, "docker", "login", "-u", user, "-p", pass, registry)
@@ -60,18 +66,19 @@ func (d *RealDockerClient) Push(ctx context.Context, tag string) error {
 	return cmd.Run()
 }
 
-// RealSSHClient uses golang.org/x/crypto/ssh to execute remote commands
 type Deployer struct {
 	DB         *gorm.DB
 	Scanner    Scanner
 	SSH        SSHClient
 	Git        GitClient
 	Docker     DockerClient
+	DockerSDK  *client.Client
 	Federation *FederatedClient
 	RepoURL    string
 }
 
 func NewDeployer(db *gorm.DB) *Deployer {
+	dockerCli, _ := client.NewClientWithOpts(client.FromEnv, client.WithAPIVersionNegotiation())
 	return &Deployer{
 		DB:      db,
 		Scanner: &RealScanner{},
@@ -80,7 +87,8 @@ func NewDeployer(db *gorm.DB) *Deployer {
 			PrivateKey: os.Getenv("SSH_PRIVATE_KEY"),
 		},
 		Git:        &RealGitClient{},
-		Docker:     &RealDockerClient{},
+		Docker:     &RealDockerClient{Client: dockerCli},
+		DockerSDK:  dockerCli,
 		Federation: &FederatedClient{},
 		RepoURL:    os.Getenv("PROJECT_REPO_URL"),
 	}
@@ -243,6 +251,20 @@ func (d *Deployer) RemoteUp(ctx context.Context, deploy *models.Deployment, targ
 	audit.LogAction(d.DB, uuid.Nil, "DEPLOY_SUCCESS", deploy.CommitHash, targetIP, "Remote deployment successful")
 
 	return nil
+}
+
+// StreamContainerLogs returns an io.ReadCloser for real-time logs
+func (d *Deployer) StreamContainerLogs(ctx context.Context, containerID string) (io.ReadCloser, error) {
+	if d.DockerSDK == nil {
+		return nil, fmt.Errorf("Docker SDK not initialized")
+	}
+
+	return d.DockerSDK.ContainerLogs(ctx, containerID, container.LogsOptions{
+		ShowStdout: true,
+		ShowStderr: true,
+		Follow:     true,
+		Timestamps: true,
+	})
 }
 
 func (d *Deployer) updateStatus(deploy *models.Deployment, status string) {

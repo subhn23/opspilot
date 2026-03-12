@@ -1,0 +1,103 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Live Logs | OpsPilot</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://unpkg.com/htmx.org@1.9.10"></script>
+    <script defer src="https://unpkg.com/alpinejs@3.x.x/dist/cdn.min.js"></script>
+</head>
+<body class="bg-slate-900 font-mono text-slate-300" x-data="{ sidebarOpen: false, connected: false }">
+    <div class="flex h-screen overflow-hidden">
+        
+        <!-- Sidebar (Simplified for full-screen logs) -->
+        <aside :class="sidebarOpen ? 'translate-x-0' : '-translate-x-full'" class="fixed inset-y-0 left-0 z-30 w-64 bg-slate-950 text-white transition-transform duration-300 transform lg:translate-x-0 lg:static lg:inset-0 border-r border-slate-800">
+            <div class="flex items-center justify-center h-16 bg-indigo-600">
+                <span class="text-xl font-bold uppercase tracking-wider">OpsPilot</span>
+            </div>
+            <nav class="mt-4 px-4 space-y-2">
+                <a href="/" class="flex items-center p-3 rounded-lg hover:bg-slate-800 transition-colors">
+                    <span class="ml-3">Dashboard</span>
+                </a>
+                <a href="/hosts" class="flex items-center p-3 rounded-lg hover:bg-slate-800 transition-colors">
+                    <span class="ml-3">Infrastructure Hosts</span>
+                </a>
+                <a href="/audit" class="flex items-center p-3 rounded-lg hover:bg-slate-800 transition-colors">
+                    <span class="ml-3">Audit Logs</span>
+                </a>
+            </nav>
+        </aside>
+
+        <!-- Main Content -->
+        <div class="flex-1 flex flex-col overflow-hidden">
+            <header class="h-16 bg-slate-950 border-b border-slate-800 flex items-center justify-between px-4 lg:px-8">
+                <div class="flex items-center">
+                    <button @click="sidebarOpen = true" class="p-2 rounded-md lg:hidden text-slate-400 hover:bg-slate-800 mr-4">
+                        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16m-7 6h7"></path></svg>
+                    </button>
+                    <h1 class="text-lg font-bold text-white flex items-center">
+                        <span class="w-3 h-3 rounded-full bg-red-500 mr-3 animate-pulse"></span>
+                        Live Logs: <span class="ml-2 text-indigo-400">{{ .ContainerID }}</span>
+                    </h1>
+                </div>
+                <div class="flex items-center space-x-4">
+                    <span x-text="connected ? 'CONNECTED' : 'DISCONNECTED'" :class="connected ? 'text-emerald-500' : 'text-red-500'" class="text-xs font-bold px-2 py-1 bg-slate-900 rounded border border-slate-800"></span>
+                    <button @click="window.location.reload()" class="text-xs bg-indigo-600 hover:bg-indigo-700 text-white px-3 py-1 rounded transition-colors">Clear & Reconnect</button>
+                </div>
+            </header>
+
+            <main class="flex-1 overflow-hidden bg-black p-4 relative">
+                <div id="log-container" class="h-full overflow-y-auto scrolling-touch flex flex-col-reverse">
+                    <div id="log-output" class="whitespace-pre-wrap break-all text-sm leading-relaxed pb-8"></div>
+                </div>
+                
+                <div class="absolute bottom-4 right-8">
+                    <button onclick="document.getElementById('log-container').scrollTo({top: 0, behavior: 'smooth'})" class="bg-slate-800 hover:bg-slate-700 text-slate-400 p-2 rounded-full shadow-lg border border-slate-700 transition-all">
+                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 14l-7 7m0 0l-7-7m7 7V3"></path></svg>
+                    </button>
+                </div>
+            </main>
+        </div>
+    </div>
+
+    <script>
+        const containerID = "{{ .ContainerID }}";
+        const logOutput = document.getElementById('log-output');
+        const logContainer = document.getElementById('log-container');
+        
+        function connect() {
+            const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
+            const socket = new WebSocket(`${protocol}//${window.location.host}/ws/logs/${containerID}`);
+
+            socket.onopen = () => {
+                const body = document.querySelector('body');
+                if (body && body.__x) body.__x.$data.connected = true;
+                logOutput.innerHTML += `<div class="text-emerald-500 italic opacity-50 py-2 border-b border-slate-800 mb-4">[SYSTEM] Connection established. Waiting for logs...</div>`;
+            };
+
+            socket.onmessage = (event) => {
+                const div = document.createElement('div');
+                div.className = 'py-0.5 border-l-2 border-transparent hover:border-indigo-500 hover:bg-slate-900 px-2 transition-all';
+                div.textContent = event.data;
+                logOutput.appendChild(div);
+                
+                // Auto-scroll logic if the user is at the bottom (reverse flex handle this mostly)
+            };
+
+            socket.onclose = () => {
+                const body = document.querySelector('body');
+                if (body && body.__x) body.__x.$data.connected = false;
+                logOutput.innerHTML += `<div class="text-red-500 italic py-2 mt-4">[SYSTEM] Connection lost. Retrying in 5s...</div>`;
+                setTimeout(connect, 5000);
+            };
+
+            socket.onerror = (error) => {
+                console.error('WebSocket Error:', error);
+            };
+        }
+
+        connect();
+    </script>
+</body>
+</html>
