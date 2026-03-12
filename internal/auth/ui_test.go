@@ -1,8 +1,10 @@
 package auth
 
 import (
+	"html/template"
 	"net/http"
 	"net/http/httptest"
+	"strings"
 	"testing"
 
 	"github.com/gin-gonic/gin"
@@ -15,7 +17,7 @@ func TestMFAEnrollTemplate(t *testing.T) {
 
 	r.GET("/auth/mfa/enroll", func(c *gin.Context) {
 		c.HTML(http.StatusOK, "mfa_enroll.html", gin.H{
-			"QRCode": "test-qr-code",
+			"QRCode": template.URL("data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAMgAAADICAYAAACt..."),
 			"Secret": "TESTSECRET123",
 		})
 	})
@@ -31,14 +33,14 @@ func TestMFAEnrollTemplate(t *testing.T) {
 	body := w.Body.String()
 	expectedSubstrings := []string{
 		"MFA Enrollment | OpsPilot",
-		"test-qr-code",
+		"data:image/png;base64",
 		"TESTSECRET123",
 		"hx-post=\"/auth/mfa/verify\"",
 	}
 
 	for _, s := range expectedSubstrings {
-		if !contains(body, s) {
-			t.Errorf("Expected body to contain %q", s)
+		if !strings.Contains(body, s) {
+			t.Errorf("Expected body to contain %q\nBody: %s", s, body)
 		}
 	}
 }
@@ -61,10 +63,10 @@ func TestAuditViewerTemplate(t *testing.T) {
 	}
 
 	body := w.Body.String()
-	if !contains(body, "System Audit Logs") {
+	if !strings.Contains(body, "System Audit Logs") {
 		t.Error("Expected body to contain 'System Audit Logs'")
 	}
-	if !contains(body, "hx-get=\"/api/audit\"") {
+	if !strings.Contains(body, "hx-get=\"/api/audit\"") {
 		t.Error("Expected body to contain hx-get for audit api")
 	}
 }
@@ -87,23 +89,10 @@ func TestEnvWizardTemplate(t *testing.T) {
 	}
 
 	body := w.Body.String()
-	if !contains(body, "Provision New Environment") {
+	if !strings.Contains(body, "Provision New Environment") {
 		t.Error("Expected body to contain 'Provision New Environment'")
 	}
-	if !contains(body, "hx-post=\"/api/environments\"") {
+	if !strings.Contains(body, "hx-post=\"/api/environments\"") {
 		t.Error("Expected body to contain hx-post for environments api")
 	}
-}
-
-func contains(s, substr string) bool {
-	return len(s) >= len(substr) && (s == substr || find(s, substr))
-}
-
-func find(s, substr string) bool {
-	for i := 0; i <= len(s)-len(substr); i++ {
-		if s[i:i+len(substr)] == substr {
-			return true
-		}
-	}
-	return false
 }

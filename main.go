@@ -2,8 +2,10 @@ package main
 
 import (
 	"fmt"
+	"html/template"
 	"log"
 	"net/http"
+	"opspilot/internal/auth"
 	"opspilot/internal/config"
 	"opspilot/internal/metrics"
 	"opspilot/internal/models"
@@ -57,9 +59,15 @@ func main() {
 
 	// MFA Enrollment
 	r.GET("/auth/mfa/enroll", func(c *gin.Context) {
+		qrBase64, secret, err := auth.GenerateTOTPQRCode("admin@opspilot.local")
+		if err != nil {
+			c.AbortWithStatusJSON(500, gin.H{"error": "Failed to generate MFA secret"})
+			return
+		}
+
 		c.HTML(http.StatusOK, "mfa_enroll.html", gin.H{
-			"QRCode": "https://via.placeholder.com/200?text=QR+CODE+PLACEHOLDER",
-			"Secret": "JBSWY3DPEHPK3PXP",
+			"QRCode": template.URL(fmt.Sprintf("data:image/png;base64,%s", qrBase64)),
+			"Secret": secret,
 		})
 	})
 
@@ -77,11 +85,11 @@ func main() {
 		for _, log := range logs {
 			html += fmt.Sprintf(`
 				<tr class="hover:bg-slate-50 transition-colors">
-					<td class="px-6 py-4 text-slate-600">%%s</td>
-					<td class="px-6 py-4 font-mono text-xs text-slate-500">%%s</td>
-					<td class="px-6 py-4"><span class="px-2 py-1 bg-indigo-100 text-indigo-700 rounded text-xs font-bold">%%s</span></td>
-					<td class="px-6 py-4 text-slate-800 font-medium">%%s</td>
-					<td class="px-6 py-4 text-slate-500">%%s</td>
+					<td class="px-6 py-4 text-slate-600">%s</td>
+					<td class="px-6 py-4 font-mono text-xs text-slate-500">%s</td>
+					<td class="px-6 py-4"><span class="px-2 py-1 bg-indigo-100 text-indigo-700 rounded text-xs font-bold">%s</span></td>
+					<td class="px-6 py-4 text-slate-800 font-medium">%s</td>
+					<td class="px-6 py-4 text-slate-500">%s</td>
 				</tr>`,
 				log.CreatedAt.Format("2006-01-02 15:04:05"),
 				log.UserID,
@@ -119,7 +127,7 @@ func main() {
 			c.Data(http.StatusInternalServerError, "text/html; charset=utf-8", []byte(fmt.Sprintf(`
 				<div class="mt-6 p-4 bg-red-100 border border-red-200 text-red-700 rounded-lg">
 					<p class="font-bold">Error Initializing</p>
-					<p class="text-sm">%%s</p>
+					<p class="text-sm">%s</p>
 				</div>`, err.Error())))
 			return
 		}
@@ -127,7 +135,7 @@ func main() {
 		c.Data(http.StatusOK, "text/html; charset=utf-8", []byte(fmt.Sprintf(`
 			<div class="mt-6 p-4 bg-green-100 border border-green-200 text-green-700 rounded-lg">
 				<p class="font-bold">Success!</p>
-				<p class="text-sm">Environment <strong>%%s</strong> is now being provisioned on <strong>%%s</strong>.</p>
+				<p class="text-sm">Environment <strong>%s</strong> is now being provisioned on <strong>%s</strong>.</p>
 				<a href="/" class="mt-2 inline-block text-xs font-bold uppercase tracking-wider underline">Go to Dashboard</a>
 			</div>`, name, hostNode)))
 	})

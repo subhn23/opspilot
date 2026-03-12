@@ -1,7 +1,10 @@
 package auth
 
 import (
+	"bytes"
+	"encoding/base64"
 	"errors"
+	"image/png"
 	"log"
 	"opspilot/internal/audit"
 	"opspilot/internal/config"
@@ -68,6 +71,27 @@ func GenerateTOTPSecret(email string) (string, error) {
 		return "", err
 	}
 	return key.Secret(), nil
+}
+
+// GenerateTOTPQRCode returns a base64 encoded QR code image for enrollment
+func GenerateTOTPQRCode(email string) (string, string, error) {
+	key, err := totp.Generate(totp.GenerateOpts{
+		Issuer:      "OpsPilot",
+		AccountName: email,
+	})
+	if err != nil {
+		return "", "", err
+	}
+
+	// Convert QR code to image
+	var buf bytes.Buffer
+	img, err := key.Image(200, 200)
+	if err != nil {
+		return "", "", err
+	}
+	png.Encode(&buf, img)
+
+	return base64.StdEncoding.EncodeToString(buf.Bytes()), key.Secret(), nil
 }
 
 // VerifyTOTP validates the 6-digit MFA code against the user's secret
