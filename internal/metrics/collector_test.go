@@ -173,7 +173,7 @@ func TestMetricCollector_Push(t *testing.T) {
 			},
 		}
 
-		err := collector.Push(context.Background(), metrics)
+		err := collector.PushToVictoriaMetrics(context.Background(), metrics)
 		if err != nil {
 			t.Fatalf("Push failed: %v", err)
 		}
@@ -191,7 +191,7 @@ func TestMetricCollector_Push(t *testing.T) {
 		}
 
 		metrics := []Metric{{ContainerID: "test-id", Timestamp: time.Now()}}
-		err := collector.Push(context.Background(), metrics)
+		err := collector.PushToVictoriaMetrics(context.Background(), metrics)
 		if err == nil {
 			t.Fatal("Expected error, got nil")
 		}
@@ -202,7 +202,7 @@ func TestMetricCollector_Push(t *testing.T) {
 
 	t.Run("NoURL", func(t *testing.T) {
 		collector := &MetricCollector{}
-		err := collector.Push(context.Background(), []Metric{{}})
+		err := collector.PushToVictoriaMetrics(context.Background(), []Metric{{}})
 		if err == nil {
 			t.Fatal("Expected error, got nil")
 		}

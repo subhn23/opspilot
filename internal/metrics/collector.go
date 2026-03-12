@@ -109,7 +109,7 @@ func (m *MetricCollector) Scrape(ctx context.Context) ([]Metric, error) {
 	return metrics, nil
 }
 
-func (m *MetricCollector) Push(ctx context.Context, metrics []Metric) error {
+func (m *MetricCollector) PushToVictoriaMetrics(ctx context.Context, metrics []Metric) error {
 	if m.VictoriaMetricsURL == "" {
 		return fmt.Errorf("VictoriaMetrics URL not set")
 	}

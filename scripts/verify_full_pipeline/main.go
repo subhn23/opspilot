@@ -49,7 +49,7 @@ func main() {
 
 	if len(results) > 0 {
 		fmt.Println("2. Pushing to Mock VictoriaMetrics...")
-		err = collector.Push(context.Background(), results)
+		err = collector.PushToVictoriaMetrics(context.Background(), results)
 		if err != nil {
 			log.Fatalf("Push failed: %v", err)
 		}
