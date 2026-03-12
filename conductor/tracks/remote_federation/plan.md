@@ -14,7 +14,7 @@
 - [x] Task: Create a UI page (`ui/templates/hosts.html`) to manage (Add/Edit/Delete) Static Hosts and input SSH keys. (7008c85)
 - [x] Task: Add API endpoints in `main.go` for managing `TargetHost` records. (2c09061)
 - [x] Task: Update the Provisioning Wizard (`env_wizard.html`) to select from available `TargetHost` records instead of hardcoded strings. (ec8ea4d)
-- [ ] Task: Refactor `Deployer.RemoteUp` to dynamically load the SSH configuration from the `TargetHost` record (decrypting the key) instead of relying on local environment variables.
+- [x] Task: Refactor `Deployer.RemoteUp` to dynamically load the SSH configuration from the `TargetHost` record (decrypting the key) instead of relying on local environment variables. (ffa970c)
 
 ## Phase 3: OpsPilot Federation
 **Goal:** Enable Master-Worker communication between OpsPilot instances.
