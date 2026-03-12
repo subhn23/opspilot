@@ -25,10 +25,11 @@ type TerraformClient interface {
 type TFClientFactory func(workingDir, execPath string) (TerraformClient, error)
 
 type TFEngine struct {
-	DB            *gorm.DB
-	WorkingDir    string
-	ExecPath      string // Path to terraform binary
-	ClientFactory TFClientFactory
+	DB               *gorm.DB
+	WorkingDir       string
+	BaseTemplatesDir string
+	ExecPath         string // Path to terraform binary
+	ClientFactory    TFClientFactory
 }
 
 // defaultClientFactory is the real implementation using tfexec
@@ -45,10 +46,11 @@ func NewTFEngine(db *gorm.DB, workingDir string) (*TFEngine, error) {
 	}
 
 	return &TFEngine{
-		DB:            db,
-		WorkingDir:    workingDir,
-		ExecPath:      execPath,
-		ClientFactory: defaultClientFactory,
+		DB:               db,
+		WorkingDir:       workingDir,
+		BaseTemplatesDir: filepath.Join("terraform", "base"), // Default path
+		ExecPath:         execPath,
+		ClientFactory:    defaultClientFactory,
 	}, nil
 }
 
@@ -117,7 +119,29 @@ func (t *TFEngine) setupTF(ctx context.Context, workspace string) (TerraformClie
 	wsDir := filepath.Join(t.WorkingDir, workspace)
 	if _, err := os.Stat(wsDir); os.IsNotExist(err) {
 		os.MkdirAll(wsDir, 0755)
-		// Here we would copy the base .tf templates to the workspace directory
+
+		// Mirror base templates
+		files, err := os.ReadDir(t.BaseTemplatesDir)
+		if err != nil {
+			return nil, fmt.Errorf("failed to read base templates: %w", err)
+		}
+
+		for _, file := range files {
+			if !file.IsDir() && filepath.Ext(file.Name()) == ".tf" {
+				src := filepath.Join(t.BaseTemplatesDir, file.Name())
+				dst := filepath.Join(wsDir, file.Name())
+
+				input, err := os.ReadFile(src)
+				if err != nil {
+					return nil, fmt.Errorf("failed to read template %s: %w", file.Name(), err)
+				}
+
+				if err := os.WriteFile(dst, input, 0644); err != nil {
+					return nil, fmt.Errorf("failed to write template %s: %w", file.Name(), err)
+				}
+				log.Printf("Mirrored template: %s", file.Name())
+			}
+		}
 	}
 
 	tf, err := t.ClientFactory(wsDir, t.ExecPath)

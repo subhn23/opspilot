@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"opspilot/internal/models"
 	"os"
+	"path/filepath"
 	"testing"
 
 	"github.com/google/uuid"
@@ -65,7 +66,11 @@ func TestProvision(t *testing.T) {
 		},
 	}
 
+	baseDir, _ := os.MkdirTemp("", "tfbase")
+	defer os.RemoveAll(baseDir)
+
 	engine, _ := NewTFEngine(db, tmpDir)
+	engine.BaseTemplatesDir = baseDir
 	engine.ClientFactory = func(workingDir, execPath string) (TerraformClient, error) {
 		return mockClient, nil
 	}
@@ -116,7 +121,11 @@ func TestDestroy(t *testing.T) {
 
 	mockClient := &MockTerraformClient{}
 
+	baseDir, _ := os.MkdirTemp("", "tfbase")
+	defer os.RemoveAll(baseDir)
+
 	engine, _ := NewTFEngine(db, tmpDir)
+	engine.BaseTemplatesDir = baseDir
 	engine.ClientFactory = func(workingDir, execPath string) (TerraformClient, error) {
 		return mockClient, nil
 	}
@@ -145,5 +154,54 @@ func TestDestroy(t *testing.T) {
 	db.First(&updatedEnv, env.ID)
 	if updatedEnv.Status != "DESTROYED" {
 		t.Errorf("Expected status DESTROYED, got %s", updatedEnv.Status)
+	}
+}
+
+func TestTemplateMirroring(t *testing.T) {
+	db := setupTestDB()
+	tmpDir, _ := os.MkdirTemp("", "tfengine_test")
+	defer os.RemoveAll(tmpDir)
+
+	// Setup fake base templates
+	baseDir := filepath.Join(tmpDir, "base")
+	os.MkdirAll(baseDir, 0755)
+	os.WriteFile(filepath.Join(baseDir, "main.tf"), []byte("resource..."), 0644)
+	os.WriteFile(filepath.Join(baseDir, "variables.tf"), []byte("variable..."), 0644)
+	os.WriteFile(filepath.Join(baseDir, "README.md"), []byte("not mirrored"), 0644)
+
+	engine, _ := NewTFEngine(db, filepath.Join(tmpDir, "workspaces"))
+	engine.BaseTemplatesDir = baseDir
+	engine.ClientFactory = func(workingDir, execPath string) (TerraformClient, error) {
+		return &MockTerraformClient{}, nil
+	}
+
+	workspace := "new-env"
+	ctx := context.Background()
+
+	// Initial setup
+	_, err := engine.setupTF(ctx, workspace)
+	if err != nil {
+		t.Fatalf("setupTF failed: %v", err)
+	}
+
+	wsDir := filepath.Join(tmpDir, "workspaces", workspace)
+
+	// 1. Verify files exist
+	if _, err := os.Stat(filepath.Join(wsDir, "main.tf")); os.IsNotExist(err) {
+		t.Error("main.tf was not mirrored")
+	}
+	if _, err := os.Stat(filepath.Join(wsDir, "variables.tf")); os.IsNotExist(err) {
+		t.Error("variables.tf was not mirrored")
+	}
+
+	// 2. Verify non-tf file was NOT mirrored
+	if _, err := os.Stat(filepath.Join(wsDir, "README.md")); err == nil {
+		t.Error("README.md should not have been mirrored")
+	}
+
+	// 3. Verify content
+	content, _ := os.ReadFile(filepath.Join(wsDir, "main.tf"))
+	if string(content) != "resource..." {
+		t.Errorf("Expected 'resource...', got %q", string(content))
 	}
 }
