@@ -11,10 +11,8 @@ import (
 	"opspilot/internal/ssh"
 	"os"
 	"os/exec"
-	"time"
 
 	"github.com/google/uuid"
-	"github.com/moby/moby/api/types/container"
 	"github.com/moby/moby/client"
 	"gorm.io/gorm"
 )
@@ -259,12 +257,16 @@ func (d *Deployer) StreamContainerLogs(ctx context.Context, containerID string) 
 		return nil, fmt.Errorf("Docker SDK not initialized")
 	}
 
-	return d.DockerSDK.ContainerLogs(ctx, containerID, container.LogsOptions{
+	resp, err := d.DockerSDK.ContainerLogs(ctx, containerID, client.ContainerLogsOptions{
 		ShowStdout: true,
 		ShowStderr: true,
 		Follow:     true,
 		Timestamps: true,
 	})
+	if err != nil {
+		return nil, err
+	}
+	return resp, nil
 }
 
 func (d *Deployer) updateStatus(deploy *models.Deployment, status string) {

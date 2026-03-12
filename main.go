@@ -13,6 +13,7 @@ import (
 	deployPkg "opspilot/internal/deploy"
 	"opspilot/internal/metrics"
 	"opspilot/internal/models"
+	"opspilot/internal/proxy"
 	"opspilot/internal/visualizer"
 	"os"
 	"time"
@@ -385,6 +386,19 @@ func main() {
 	})
 
 	// 7. Start Server
+	// Start OpsProxy in background
+	opsProxy := proxy.NewOpsProxy(db)
+	proxyPort := os.Getenv("PROXY_PORT")
+	if proxyPort == "" {
+		proxyPort = "443"
+	}
+	go func() {
+		// Note: ListenAndServeTLS in Start method will block if no certs are found,
+		// but it's set up to fetch from DB dynamically.
+		// If running locally as non-root, use PROXY_PORT=8443
+		opsProxy.Start(":" + proxyPort)
+	}()
+
 	port := "8080"
 	log.Printf("OpsPilot Control Plane starting on :%s", port)
 	if err := r.Run(":" + port); err != nil {
