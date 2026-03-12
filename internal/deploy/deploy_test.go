@@ -2,6 +2,7 @@ package deploy
 
 import (
 	"context"
+	"fmt"
 	"opspilot/internal/models"
 	"testing"
 
@@ -30,7 +31,7 @@ func TestScanImage(t *testing.T) {
 
 	t.Run("Safe Image", func(t *testing.T) {
 		mock := &MockScanner{Safe: true, Report: "Clean"}
-		deployer := &Deployer{Scanner: mock}
+		deployer := &Deployer{Scanner: mock, Git: &MockGitClient{}}
 
 		safe, report, err := deployer.ScanImage(ctx, "test-image")
 		if err != nil {
@@ -46,7 +47,7 @@ func TestScanImage(t *testing.T) {
 
 	t.Run("Unsafe Image", func(t *testing.T) {
 		mock := &MockScanner{Safe: false, Report: "Vulnerability Found"}
-		deployer := &Deployer{DB: setupTestDB(), Scanner: mock}
+		deployer := &Deployer{DB: setupTestDB(), Scanner: mock, Git: &MockGitClient{}}
 
 		deploy := &models.Deployment{CommitHash: "unsafe123"}
 		deployer.DB.Create(deploy)
@@ -133,7 +134,7 @@ func TestBuildAndPush(t *testing.T) {
 	db := setupTestDB()
 	ctx := context.Background()
 	mockScanner := &MockScanner{Safe: true, Report: "All good"}
-	deployer := &Deployer{DB: db, Scanner: mockScanner}
+	deployer := &Deployer{DB: db, Scanner: mockScanner, Git: &MockGitClient{}}
 
 	deploy := &models.Deployment{
 		CommitHash: "feat123",
@@ -150,5 +151,62 @@ func TestBuildAndPush(t *testing.T) {
 	db.First(&updated, deploy.ID)
 	if updated.Status != "PUSHED" {
 		t.Errorf("Expected status PUSHED, got %s", updated.Status)
+	}
+}
+
+type MockGitClient struct {
+	CloneCalled    bool
+	CheckoutCalled bool
+	CloneError     error
+	CheckoutError  error
+}
+
+func (m *MockGitClient) Clone(ctx context.Context, repoURL, targetDir string) error {
+	m.CloneCalled = true
+	return m.CloneError
+}
+
+func (m *MockGitClient) Checkout(ctx context.Context, targetDir, commitHash string) error {
+	m.CheckoutCalled = true
+	return m.CheckoutError
+}
+
+func TestGitIntegration(t *testing.T) {
+	db := setupTestDB()
+	ctx := context.Background()
+	mockGit := &MockGitClient{}
+	mockScanner := &MockScanner{Safe: true}
+	deployer := &Deployer{DB: db, Scanner: mockScanner, Git: mockGit}
+
+	deploy := &models.Deployment{
+		CommitHash: "feat123",
+		Branch:     "main",
+	}
+	db.Create(deploy)
+
+	err := deployer.BuildAndPush(ctx, deploy)
+
+	if err != nil {
+		t.Fatalf("BuildAndPush failed: %v", err)
+	}
+
+	if !mockGit.CloneCalled {
+		t.Error("Git Clone was not called")
+	}
+	if !mockGit.CheckoutCalled {
+		t.Error("Git Checkout was not called")
+	}
+
+	// Test Failure
+	mockGit.CloneError = fmt.Errorf("git error")
+	err = deployer.BuildAndPush(ctx, deploy)
+	if err == nil {
+		t.Error("Expected error from git clone")
+	}
+
+	var updated models.Deployment
+	db.First(&updated, deploy.ID)
+	if updated.Status != "FAILED_BUILD" {
+		t.Errorf("Expected status FAILED_BUILD, got %s", updated.Status)
 	}
 }

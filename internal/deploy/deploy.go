@@ -6,6 +6,8 @@ import (
 	"log"
 	"opspilot/internal/audit"
 	"opspilot/internal/models"
+	"os"
+	"os/exec"
 
 	"github.com/google/uuid"
 	"gorm.io/gorm"
@@ -13,6 +15,23 @@ import (
 
 type SSHClient interface {
 	RunCommand(ctx context.Context, addr, command string) (string, error)
+}
+
+type GitClient interface {
+	Clone(ctx context.Context, repoURL, targetDir string) error
+	Checkout(ctx context.Context, targetDir, commitHash string) error
+}
+
+type RealGitClient struct{}
+
+func (g *RealGitClient) Clone(ctx context.Context, repoURL, targetDir string) error {
+	cmd := exec.CommandContext(ctx, "git", "clone", repoURL, targetDir)
+	return cmd.Run()
+}
+
+func (g *RealGitClient) Checkout(ctx context.Context, targetDir, commitHash string) error {
+	cmd := exec.CommandContext(ctx, "git", "-C", targetDir, "checkout", commitHash)
+	return cmd.Run()
 }
 
 // RealSSHClient uses golang.org/x/crypto/ssh to execute remote commands
@@ -30,6 +49,8 @@ type Deployer struct {
 	DB      *gorm.DB
 	Scanner Scanner
 	SSH     SSHClient
+	Git     GitClient
+	RepoURL string
 }
 
 func NewDeployer(db *gorm.DB) *Deployer {
@@ -37,6 +58,8 @@ func NewDeployer(db *gorm.DB) *Deployer {
 		DB:      db,
 		Scanner: &RealScanner{},
 		SSH:     &RealSSHClient{User: "root"},
+		Git:     &RealGitClient{},
+		RepoURL: os.Getenv("PROJECT_REPO_URL"),
 	}
 }
 
@@ -48,6 +71,24 @@ func (d *Deployer) ScanImage(ctx context.Context, imageName string) (bool, strin
 // BuildAndPush triggers a local docker build and pushes to the mirrored registry
 func (d *Deployer) BuildAndPush(ctx context.Context, deploy *models.Deployment) error {
 	d.updateStatus(deploy, "BUILDING")
+
+	// 1. Clone & Checkout
+	tmpDir, err := os.MkdirTemp("", "opspilot-build-*")
+	if err != nil {
+		d.updateStatus(deploy, "FAILED_BUILD")
+		return fmt.Errorf("failed to create temp dir: %w", err)
+	}
+	defer os.RemoveAll(tmpDir)
+
+	if err := d.Git.Clone(ctx, d.RepoURL, tmpDir); err != nil {
+		d.updateStatus(deploy, "FAILED_BUILD")
+		return fmt.Errorf("git clone failed: %w", err)
+	}
+
+	if err := d.Git.Checkout(ctx, tmpDir, deploy.CommitHash); err != nil {
+		d.updateStatus(deploy, "FAILED_BUILD")
+		return fmt.Errorf("git checkout failed: %w", err)
+	}
 
 	// ... (build logic) ...
 	imageName := fmt.Sprintf("localhost:5000/app:%s", deploy.CommitHash)
