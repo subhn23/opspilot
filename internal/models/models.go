@@ -68,7 +68,9 @@ type Environment struct {
 	ID        uuid.UUID `gorm:"type:uuid;primaryKey"`
 	Name      string    `gorm:"uniqueIndex;not null"` // e.g., "staging-auth"
 	Type      string    `gorm:"not null"`             // prod, staging, dev
-	HostNode  string    `gorm:"not null"`             // host1 or host2
+	HostNode  string    `gorm:"not null"`             // host1 or host2 (Legacy, being replaced by TargetHostID)
+	TargetHostID *uuid.UUID `gorm:"type:uuid"`
+	TargetHost   TargetHost `gorm:"foreignKey:TargetHostID"`
 	VMID      int       `gorm:"uniqueIndex"`
 	IPAddress string
 	TTL       *time.Time // Expiry for Dev environments

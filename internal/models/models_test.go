@@ -123,3 +123,30 @@ func TestTargetHostModel(t *testing.T) {
 		t.Errorf("Expected name 'Test Host', got %s", saved.Name)
 	}
 }
+
+func TestEnvironmentTargetHostLink(t *testing.T) {
+	db, _ := gorm.Open(sqlite.Open(":memory:"), &gorm.Config{})
+	db.AutoMigrate(&TargetHost{}, &Environment{})
+
+	host := TargetHost{Name: "Main Server", Type: "local_proxmox"}
+	db.Create(&host)
+
+	env := Environment{
+		Name:         "Dev Env",
+		Type:         "dev",
+		TargetHostID: &host.ID,
+	}
+
+	if err := db.Create(&env).Error; err != nil {
+		t.Fatalf("Failed to create Environment with TargetHostID: %v", err)
+	}
+
+	var savedEnv Environment
+	db.Preload("TargetHost").First(&savedEnv, env.ID)
+	if savedEnv.TargetHostID == nil || *savedEnv.TargetHostID != host.ID {
+		t.Error("TargetHostID was not saved correctly")
+	}
+	if savedEnv.TargetHost.Name != "Main Server" {
+		t.Errorf("Expected associated host name 'Main Server', got %s", savedEnv.TargetHost.Name)
+	}
+}
