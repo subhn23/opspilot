@@ -197,6 +197,22 @@ func main() {
 		})
 	})
 
+	// Backup Configuration API
+	r.POST("/api/config/backup", func(c *gin.Context) {
+		path := c.PostForm("path")
+		if path == "" {
+			c.JSON(http.StatusBadRequest, gin.H{"error": "backup path is required"})
+			return
+		}
+
+		if err := config.ConfigureWALArchiving(db, path); err != nil {
+			c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+			return
+		}
+
+		c.JSON(http.StatusOK, gin.H{"status": "SUCCESS", "message": "WAL archiving configured"})
+	})
+
 	// Audit API (HTMX)
 	r.GET("/api/audit", func(c *gin.Context) {
 		var logs []models.AuditLog
