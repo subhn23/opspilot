@@ -5,7 +5,7 @@
 
 - [x] Task: Complete `AuthMiddleware` in `internal/auth/auth.go` to validate JWT sessions. (ab291a1)
 - [x] Task: Create `ui/templates/mfa_enroll.html` for TOTP QR code display. (0564ce8)
-- [ ] Task: Build the Audit Viewer page to display `system_audit_logs`.
+- [x] Task: Build the Audit Viewer page to display `system_audit_logs`. (2255308)
 - [ ] Task: Implement the HTMX-based Environment Wizard for VM provisioning.
 
 ## Phase 2: Infrastructure & Deployment Logic
