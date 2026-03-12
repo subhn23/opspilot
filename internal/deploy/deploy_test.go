@@ -3,6 +3,7 @@ package deploy
 import (
 	"context"
 	"fmt"
+	"opspilot/internal/crypto"
 	"opspilot/internal/models"
 	"os"
 	"testing"
@@ -23,7 +24,7 @@ func (m *MockScanner) Scan(ctx context.Context, imageName string) (bool, string,
 
 func setupTestDB() *gorm.DB {
 	db, _ := gorm.Open(sqlite.Open(":memory:"), &gorm.Config{})
-	db.AutoMigrate(&models.Deployment{}, &models.AuditLog{})
+	db.AutoMigrate(&models.Deployment{}, &models.AuditLog{}, &models.TargetHost{}, &models.Environment{})
 	return db
 }
 
@@ -86,14 +87,21 @@ func TestScanImage(t *testing.T) {
 }
 
 type MockSSHClient struct {
-	CommandsRun []string
-	MockOutput  string
-	MockErr     error
+	CommandsRun  []string
+	MockOutput   string
+	MockErr      error
+	ConfigLoaded bool
 }
 
 func (m *MockSSHClient) RunCommand(ctx context.Context, addr, command string) (string, error) {
 	m.CommandsRun = append(m.CommandsRun, command)
 	return m.MockOutput, m.MockErr
+}
+
+func (m *MockSSHClient) Configure(user, privateKey string) {
+	if user != "" && privateKey != "" {
+		m.ConfigLoaded = true
+	}
 }
 
 func TestRemoteUp(t *testing.T) {
@@ -128,6 +136,50 @@ func TestRemoteUp(t *testing.T) {
 	err = db.Where("action = ?", "DEPLOY_SUCCESS").First(&auditEntry).Error
 	if err != nil {
 		t.Errorf("Failed to find audit log entry: %v", err)
+	}
+}
+
+func TestRemoteUpWithTargetHost(t *testing.T) {
+	db := setupTestDB()
+	ctx := context.Background()
+	mockSSH := &MockSSHClient{MockOutput: "Done"}
+	deployer := &Deployer{DB: db, SSH: mockSSH, Git: &MockGitClient{}, Docker: &MockDockerClient{}}
+
+	os.Setenv("ENCRYPTION_KEY", "0123456789abcdef0123456789abcdef")
+	defer os.Unsetenv("ENCRYPTION_KEY")
+
+	// 1. Create TargetHost with encrypted AuthData
+	authData := "fake-ssh-key"
+	encrypted, _ := crypto.Encrypt(authData)
+
+	host := models.TargetHost{
+		Name:     "Dynamic Host",
+		Type:     "remote_ssh",
+		Endpoint: "192.168.1.50",
+		AuthData: encrypted,
+	}
+	db.Create(&host)
+
+	// 2. Create Environment linked to Host
+	env := models.Environment{
+		Name:         "Dynamic Env",
+		TargetHostID: &host.ID,
+	}
+	db.Create(&env)
+
+	deploy := &models.Deployment{
+		EnvironmentID: env.ID,
+		CommitHash:    "abc1234",
+	}
+	db.Create(deploy)
+
+	err := deployer.RemoteUp(ctx, deploy, "192.168.1.50")
+	if err != nil {
+		t.Fatalf("RemoteUp failed: %v", err)
+	}
+
+	if !mockSSH.ConfigLoaded {
+		t.Error("SSH config (key) was not loaded from TargetHost")
 	}
 }
 

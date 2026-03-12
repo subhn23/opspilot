@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"log"
 	"opspilot/internal/audit"
+	"opspilot/internal/crypto"
 	"opspilot/internal/models"
 	"os"
 	"os/exec"
@@ -17,6 +18,7 @@ import (
 
 type SSHClient interface {
 	RunCommand(ctx context.Context, addr, command string) (string, error)
+	Configure(user, privateKey string)
 }
 
 type GitClient interface {
@@ -80,7 +82,7 @@ func (s *RealSSHClient) RunCommand(ctx context.Context, addr, command string) (s
 		Auth: []ssh.AuthMethod{
 			ssh.PublicKeys(signer),
 		},
-		HostKeyCallback: ssh.InsecureIgnoreHostKey(), // For dynamic VMs, ideally we'd use a known hosts file
+		HostKeyCallback: ssh.InsecureIgnoreHostKey(),
 		Timeout:         10 * time.Second,
 	}
 
@@ -102,6 +104,11 @@ func (s *RealSSHClient) RunCommand(ctx context.Context, addr, command string) (s
 	}
 
 	return string(output), nil
+}
+
+func (s *RealSSHClient) Configure(user, privateKey string) {
+	s.User = user
+	s.PrivateKey = privateKey
 }
 
 type Deployer struct {
@@ -201,6 +208,21 @@ func (d *Deployer) BuildAndPush(ctx context.Context, deploy *models.Deployment) 
 // RemoteUp SSHs into the dynamic VM and runs docker-compose up
 func (d *Deployer) RemoteUp(ctx context.Context, deploy *models.Deployment, targetIP string) error {
 	d.updateStatus(deploy, "DEPLOYING")
+
+	// 1. Fetch Environment and Host to dynamically load SSH config
+	var env models.Environment
+	if err := d.DB.Preload("TargetHost").First(&env, "id = ?", deploy.EnvironmentID).Error; err == nil {
+		if env.TargetHostID != nil && env.TargetHost.AuthData != "" {
+			// Decrypt SSH Key
+			key, err := crypto.Decrypt(env.TargetHost.AuthData)
+			if err == nil {
+				log.Printf("Deployer: Loaded dynamic SSH key for host %s", env.TargetHost.Name)
+				d.SSH.Configure("root", key) // Default to root for now
+			} else {
+				log.Printf("Deployer: Failed to decrypt SSH key for host %s: %v", env.TargetHost.Name, err)
+			}
+		}
+	}
 
 	registry := os.Getenv("REGISTRY_URL")
 	imageName := fmt.Sprintf("%s/app:%s", registry, deploy.CommitHash)
