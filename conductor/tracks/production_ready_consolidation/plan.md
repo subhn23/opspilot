@@ -11,7 +11,7 @@
 ## Phase 2: Infrastructure & Deployment Logic
 **Goal:** Finalize the Terraform and Docker delivery pipelines.
 
-- [ ] Task: Implement Terraform template mirroring logic in `internal/terraform/terraform.go`.
+- [x] Task: Implement Terraform template mirroring logic in `internal/terraform/terraform.go`. (357857e)
 - [ ] Task: Securely pass Proxmox credentials to `TFEngine`.
 - [ ] Task: Implement `git clone` and `git checkout` in `BuildAndPush`.
 - [ ] Task: Add `docker login` and push logic for the mirrored registry.
