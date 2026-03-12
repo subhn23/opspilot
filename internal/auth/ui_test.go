@@ -81,7 +81,11 @@ func TestEnvWizardTemplate(t *testing.T) {
 	r.LoadHTMLGlob("../../ui/templates/*")
 
 	r.GET("/environments/new", func(c *gin.Context) {
-		c.HTML(http.StatusOK, "env_wizard.html", nil)
+		c.HTML(http.StatusOK, "env_wizard.html", gin.H{
+			"Hosts": []models.TargetHost{
+				{Name: "Mock Host", Type: "remote_ssh"},
+			},
+		})
 	})
 
 	w := httptest.NewRecorder()
@@ -95,6 +99,9 @@ func TestEnvWizardTemplate(t *testing.T) {
 	body := w.Body.String()
 	if !strings.Contains(body, "Provision New Environment") {
 		t.Error("Expected body to contain 'Provision New Environment'")
+	}
+	if !strings.Contains(body, "Mock Host") {
+		t.Error("Expected body to contain 'Mock Host' in dropdown")
 	}
 	if !strings.Contains(body, "hx-post=\"/api/environments\"") {
 		t.Error("Expected body to contain hx-post for environments api")

@@ -172,21 +172,28 @@ func main() {
 
 	// Environment Wizard Page
 	r.GET("/environments/new", func(c *gin.Context) {
-		c.HTML(http.StatusOK, "env_wizard.html", nil)
+		var hosts []models.TargetHost
+		db.Order("name asc").Find(&hosts)
+
+		c.HTML(http.StatusOK, "env_wizard.html", gin.H{
+			"Hosts": hosts,
+		})
 	})
 
 	// Environment API (HTMX Provisioning)
 	r.POST("/api/environments", func(c *gin.Context) {
 		name := c.PostForm("name")
 		envType := c.PostForm("type")
-		hostNode := c.PostForm("host_node")
+		hostIDStr := c.PostForm("target_host_id")
+
+		hostID, _ := uuid.Parse(hostIDStr)
 
 		// Create record in DB
 		env := models.Environment{
-			Name:     name,
-			Type:     envType,
-			HostNode: hostNode,
-			Status:   "PROVISIONING",
+			Name:         name,
+			Type:         envType,
+			TargetHostID: &hostID,
+			Status:       "PROVISIONING",
 		}
 
 		if err := db.Create(&env).Error; err != nil {
@@ -198,12 +205,16 @@ func main() {
 			return
 		}
 
+		// Fetch host name for success message
+		var host models.TargetHost
+		db.First(&host, hostID)
+
 		c.Data(http.StatusOK, "text/html; charset=utf-8", []byte(fmt.Sprintf(`
 			<div class="mt-6 p-4 bg-green-100 border border-green-200 text-green-700 rounded-lg">
 				<p class="font-bold">Success!</p>
 				<p class="text-sm">Environment <strong>%s</strong> is now being provisioned on <strong>%s</strong>.</p>
 				<a href="/" class="mt-2 inline-block text-xs font-bold uppercase tracking-wider underline">Go to Dashboard</a>
-			</div>`, name, hostNode)))
+			</div>`, name, host.Name)))
 	})
 
 	// Topology API (HTMX support)

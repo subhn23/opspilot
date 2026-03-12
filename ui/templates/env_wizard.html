@@ -74,11 +74,16 @@
 
                             <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
                                 <div>
-                                    <label class="block text-sm font-medium text-slate-700 mb-2">Host Node</label>
-                                    <select name="host_node" class="w-full px-4 py-2 rounded-lg border border-slate-300 focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 outline-none transition-all">
-                                        <option value="host1">Host 1 (Primary)</option>
-                                        <option value="host2">Host 2 (Standby)</option>
+                                    <label class="block text-sm font-medium text-slate-700 mb-2">Target Host</label>
+                                    <select name="target_host_id" class="w-full px-4 py-2 rounded-lg border border-slate-300 focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 outline-none transition-all">
+                                        {{ range .Hosts }}
+                                        <option value="{{ .ID }}">{{ .Name }} ({{ .Type }})</option>
+                                        {{ end }}
+                                        {{ if not .Hosts }}
+                                        <option disabled selected>No hosts registered</option>
+                                        {{ end }}
                                     </select>
+                                    <p class="mt-1 text-xs text-slate-400">Select the infrastructure node for this environment.</p>
                                 </div>
                                 <div>
                                     <label class="block text-sm font-medium text-slate-700 mb-2">CPU Cores</label>
