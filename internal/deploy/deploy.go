@@ -112,12 +112,13 @@ func (s *RealSSHClient) Configure(user, privateKey string) {
 }
 
 type Deployer struct {
-	DB      *gorm.DB
-	Scanner Scanner
-	SSH     SSHClient
-	Git     GitClient
-	Docker  DockerClient
-	RepoURL string
+	DB         *gorm.DB
+	Scanner    Scanner
+	SSH        SSHClient
+	Git        GitClient
+	Docker     DockerClient
+	Federation *FederatedClient
+	RepoURL    string
 }
 
 func NewDeployer(db *gorm.DB) *Deployer {
@@ -128,10 +129,48 @@ func NewDeployer(db *gorm.DB) *Deployer {
 			User:       getEnv("SSH_USER", "root"),
 			PrivateKey: os.Getenv("SSH_PRIVATE_KEY"),
 		},
-		Git:     &RealGitClient{},
-		Docker:  &RealDockerClient{},
-		RepoURL: os.Getenv("PROJECT_REPO_URL"),
+		Git:        &RealGitClient{},
+		Docker:     &RealDockerClient{},
+		Federation: &FederatedClient{},
+		RepoURL:    os.Getenv("PROJECT_REPO_URL"),
 	}
+}
+
+// Deploy orchestrates the deployment based on host type (Local, SSH, Federated)
+func (d *Deployer) Deploy(ctx context.Context, deploy *models.Deployment, host *models.TargetHost) error {
+	if host.Type == "federated_opspilot" {
+		d.updateStatus(deploy, "FEDERATING")
+		log.Printf("Deployer: Forwarding deployment to worker %s (%s)", host.Name, host.Endpoint)
+
+		token, err := crypto.Decrypt(host.AuthData)
+		if err != nil {
+			return fmt.Errorf("failed to decrypt federation token: %w", err)
+		}
+
+		req := models.FederationRequest{
+			EnvironmentName: deploy.Environment.Name,
+			CommitHash:      deploy.CommitHash,
+			Branch:          deploy.Branch,
+			TargetIP:        host.Endpoint,
+		}
+
+		logs, err := d.Federation.Deploy(ctx, host.Endpoint, token, req)
+		deploy.Logs += "\n--- Remote Worker Logs ---\n" + logs
+		if err != nil {
+			d.updateStatus(deploy, "FAILED_FEDERATION")
+			return fmt.Errorf("federation failed: %w", err)
+		}
+
+		d.updateStatus(deploy, "SUCCESS")
+		return nil
+	}
+
+	// Local or SSH Flow
+	if err := d.BuildAndPush(ctx, deploy); err != nil {
+		return err
+	}
+
+	return d.RemoteUp(ctx, deploy, host.Endpoint)
 }
 
 // ScanImage runs a vulnerability scan on the image using the configured scanner

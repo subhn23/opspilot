@@ -33,7 +33,7 @@ func TestScanImage(t *testing.T) {
 
 	t.Run("Safe Image", func(t *testing.T) {
 		mock := &MockScanner{Safe: true, Report: "Clean"}
-		deployer := &Deployer{Scanner: mock, Git: &MockGitClient{}, Docker: &MockDockerClient{}}
+		deployer := &Deployer{Scanner: mock, Git: &MockGitClient{}, Docker: &MockDockerClient{}, Federation: &FederatedClient{}}
 
 		safe, report, err := deployer.ScanImage(ctx, "test-image")
 		if err != nil {
@@ -49,7 +49,7 @@ func TestScanImage(t *testing.T) {
 
 	t.Run("Unsafe Image", func(t *testing.T) {
 		mock := &MockScanner{Safe: false, Report: "Vulnerability Found"}
-		deployer := &Deployer{DB: setupTestDB(), Scanner: mock, Git: &MockGitClient{}, Docker: &MockDockerClient{}}
+		deployer := &Deployer{DB: setupTestDB(), Scanner: mock, Git: &MockGitClient{}, Docker: &MockDockerClient{}, Federation: &FederatedClient{}}
 
 		deploy := &models.Deployment{CommitHash: "unsafe123"}
 		deployer.DB.Create(deploy)
@@ -108,7 +108,7 @@ func TestRemoteUp(t *testing.T) {
 	db := setupTestDB()
 	ctx := context.Background()
 	mockSSH := &MockSSHClient{MockOutput: "Done"}
-	deployer := &Deployer{DB: db, SSH: mockSSH, Git: &MockGitClient{}, Docker: &MockDockerClient{}}
+	deployer := &Deployer{DB: db, SSH: mockSSH, Git: &MockGitClient{}, Docker: &MockDockerClient{}, Federation: &FederatedClient{}}
 
 	deploy := &models.Deployment{
 		CommitHash: "abc1234",
@@ -143,7 +143,7 @@ func TestRemoteUpWithTargetHost(t *testing.T) {
 	db := setupTestDB()
 	ctx := context.Background()
 	mockSSH := &MockSSHClient{MockOutput: "Done"}
-	deployer := &Deployer{DB: db, SSH: mockSSH, Git: &MockGitClient{}, Docker: &MockDockerClient{}}
+	deployer := &Deployer{DB: db, SSH: mockSSH, Git: &MockGitClient{}, Docker: &MockDockerClient{}, Federation: &FederatedClient{}}
 
 	os.Setenv("ENCRYPTION_KEY", "0123456789abcdef0123456789abcdef")
 	defer os.Unsetenv("ENCRYPTION_KEY")
@@ -187,7 +187,7 @@ func TestBuildAndPush(t *testing.T) {
 	db := setupTestDB()
 	ctx := context.Background()
 	mockScanner := &MockScanner{Safe: true, Report: "All good"}
-	deployer := &Deployer{DB: db, Scanner: mockScanner, Git: &MockGitClient{}, Docker: &MockDockerClient{}}
+	deployer := &Deployer{DB: db, Scanner: mockScanner, Git: &MockGitClient{}, Docker: &MockDockerClient{}, Federation: &FederatedClient{}}
 
 	deploy := &models.Deployment{
 		CommitHash: "feat123",
@@ -230,7 +230,7 @@ func TestGitIntegration(t *testing.T) {
 	mockGit := &MockGitClient{}
 	mockDocker := &MockDockerClient{}
 	mockScanner := &MockScanner{Safe: true}
-	deployer := &Deployer{DB: db, Scanner: mockScanner, Git: mockGit, Docker: mockDocker}
+	deployer := &Deployer{DB: db, Scanner: mockScanner, Git: mockGit, Docker: mockDocker, Federation: &FederatedClient{}}
 
 	deploy := &models.Deployment{
 		CommitHash: "feat123",
@@ -295,7 +295,7 @@ func TestDockerIntegration(t *testing.T) {
 	mockDocker := &MockDockerClient{}
 	mockGit := &MockGitClient{}
 	mockScanner := &MockScanner{Safe: true}
-	deployer := &Deployer{DB: db, Scanner: mockScanner, Git: mockGit, Docker: mockDocker}
+	deployer := &Deployer{DB: db, Scanner: mockScanner, Git: mockGit, Docker: mockDocker, Federation: &FederatedClient{}}
 
 	os.Setenv("REGISTRY_URL", "localhost:5000")
 	os.Setenv("REGISTRY_USER", "user")
