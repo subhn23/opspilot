@@ -16,7 +16,7 @@
 - [x] Task: Update the Provisioning Wizard (`env_wizard.html`) to select from available `TargetHost` records instead of hardcoded strings. (ec8ea4d)
 - [x] Task: Refactor `Deployer.RemoteUp` to dynamically load the SSH configuration from the `TargetHost` record (decrypting the key) instead of relying on local environment variables. (ffa970c)
 
-## Phase 3: OpsPilot Federation
+## Phase 3: OpsPilot Federation [checkpoint: b5ba20d]
 **Goal:** Enable Master-Worker communication between OpsPilot instances.
 
 - [x] Task: Add a UI section to register a "Federated OpsPilot" (URL and API Token). (36a5ee6)

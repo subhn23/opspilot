@@ -21,5 +21,5 @@ This file tracks all major tracks for the project. Each track has its own detail
 ---
 
 ## Future Capabilities: Distributed Orchestration
-- [~] **Track: Remote Host & Federation Management**
+- [x] **Track: Remote Host & Federation Management**
   *Link: [./tracks/remote_federation/](./tracks/remote_federation/)*
