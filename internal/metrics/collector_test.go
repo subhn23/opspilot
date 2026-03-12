@@ -36,11 +36,24 @@ func (m *MockDockerClient) ContainerStats(ctx context.Context, containerID strin
 		return client.ContainerStatsResult{}, m.StatsError
 	}
 	b, _ := json.Marshal(m.Stats)
+
+	if options.Stream {
+		// Create a pipe to simulate streaming
+		pr, pw := io.Pipe()
+		go func() {
+			// Send one stat and close
+			pw.Write(b)
+			pw.Close()
+		}()
+		return client.ContainerStatsResult{
+			Body: io.NopCloser(pr),
+		}, nil
+	}
+
 	return client.ContainerStatsResult{
 		Body: io.NopCloser(strings.NewReader(string(b))),
 	}, nil
 }
-
 func TestMetricCollector_Scrape(t *testing.T) {
 	t.Run("Success", func(t *testing.T) {
 		mockDocker := &MockDockerClient{

@@ -1,6 +1,7 @@
 package metrics
 
 import (
+	"context"
 	"log"
 	"net/http"
 	"time"
@@ -34,44 +35,34 @@ func (s *MetricStreamer) StreamContainerStats(c *gin.Context) {
 	}
 	defer conn.Close()
 
-	ticker := time.NewTicker(1 * time.Second)
-	defer ticker.Stop()
+	if s.Collector == nil || s.Collector.Docker == nil {
+		log.Printf("StreamContainerStats: Collector or Docker client is nil")
+		return
+	}
+
+	ctx, cancel := context.WithCancel(c.Request.Context())
+	defer cancel()
+
+	statsChan, errChan := s.Collector.StreamStats(ctx, containerID)
 
 	for {
 		select {
-		case <-ticker.C:
-			// For now, if Collector is nil, send mock data to pass initial test
-			// In Task 2 of Phase 2, we will integrate with real collector
-			var stats map[string]interface{}
-			
-			if s.Collector != nil && s.Collector.Docker != nil {
-				results, err := s.Collector.Scrape(c.Request.Context())
-				if err == nil {
-					for _, m := range results {
-						if m.ContainerID == containerID {
-							stats = map[string]interface{}{
-								"container_id": m.ContainerID,
-								"cpu":          m.CPUUsage,
-								"memory":       m.MemoryUsage,
-								"time":         m.Timestamp.Format(time.Kitchen),
-							}
-							break
-						}
-					}
-				}
+		case m, ok := <-statsChan:
+			if !ok {
+				return
 			}
-
-			if stats == nil {
-				// Mock data fallback
-				stats = map[string]interface{}{
-					"container_id": containerID,
-					"cpu":          12.5,
-					"memory":       256 * 1024 * 1024,
-					"time":         time.Now().Format(time.Kitchen),
-				}
+			stats := map[string]interface{}{
+				"container_id": m.ContainerID,
+				"cpu":          m.CPUUsage,
+				"memory":       m.MemoryUsage,
+				"time":         m.Timestamp.Format(time.Kitchen),
 			}
-
 			if err := conn.WriteJSON(stats); err != nil {
+				return
+			}
+		case err := <-errChan:
+			if err != nil {
+				log.Printf("StreamContainerStats: error from Docker: %v", err)
 				return
 			}
 		case <-c.Request.Context().Done():
@@ -79,3 +70,4 @@ func (s *MetricStreamer) StreamContainerStats(c *gin.Context) {
 		}
 	}
 }
+

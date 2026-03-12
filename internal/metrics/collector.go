@@ -33,7 +33,46 @@ type MetricCollector struct {
 	HTTPClient         *http.Client
 }
 
+// StreamStats returns a channel that receives real-time stats for a container
+func (m *MetricCollector) StreamStats(ctx context.Context, containerID string) (<-chan Metric, <-chan error) {
+	out := make(chan Metric)
+	errs := make(chan error, 1)
+
+	go func() {
+		defer close(out)
+		defer close(errs)
+
+		resp, err := m.Docker.ContainerStats(ctx, containerID, client.ContainerStatsOptions{Stream: true})
+		if err != nil {
+			errs <- err
+			return
+		}
+		defer resp.Body.Close()
+
+		decoder := json.NewDecoder(resp.Body)
+		for {
+			var v container.StatsResponse
+			if err := decoder.Decode(&v); err != nil {
+				if err != io.EOF {
+					errs <- err
+				}
+				return
+			}
+
+			out <- Metric{
+				ContainerID: containerID,
+				CPUUsage:    calculateCPUPercent(&v),
+				MemoryUsage: v.MemoryStats.Usage,
+				Timestamp:   time.Now(),
+			}
+		}
+	}()
+
+	return out, errs
+}
+
 func (m *MetricCollector) Scrape(ctx context.Context) ([]Metric, error) {
+
 	resp, err := m.Docker.ContainerList(ctx, client.ContainerListOptions{})
 	if err != nil {
 		return nil, fmt.Errorf("failed to list containers: %w", err)

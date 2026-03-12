@@ -13,36 +13,8 @@ import (
 func TestMetricStreamer_StreamContainerStats(t *testing.T) {
 	gin.SetMode(gin.TestMode)
 
-	t.Run("MockDataFallback", func(t *testing.T) {
-		streamer := &MetricStreamer{}
-		r := gin.New()
-		r.GET("/ws/metrics/:id", streamer.StreamContainerStats)
-		server := httptest.NewServer(r)
-		defer server.Close()
-
-		wsURL := "ws" + strings.TrimPrefix(server.URL, "http") + "/ws/metrics/test-id"
-		dialer := websocket.Dialer{}
-		conn, _, err := dialer.Dial(wsURL, nil)
-		if err != nil {
-			t.Fatalf("Failed to connect to WebSocket: %v", err)
-		}
-		defer conn.Close()
-
-		var msg map[string]interface{}
-		err = conn.ReadJSON(&msg)
-		if err != nil {
-			t.Fatalf("Failed to read JSON: %v", err)
-		}
-
-		if msg["container_id"] != "test-id" {
-			t.Errorf("Expected container_id test-id, got %v", msg["container_id"])
-		}
-		if msg["cpu"] != 12.5 {
-			t.Errorf("Expected cpu 12.5, got %v", msg["cpu"])
-		}
-	})
-
 	t.Run("WithRealCollector", func(t *testing.T) {
+
 		mockDocker := &MockDockerClient{
 			Containers: []container.Summary{
 				{ID: "real-id", Names: []string{"/real-container"}},
