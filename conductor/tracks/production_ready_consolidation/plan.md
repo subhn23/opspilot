@@ -15,7 +15,7 @@
 - [x] Task: Securely pass Proxmox credentials to `TFEngine`. (0e66b3f)
 - [x] Task: Implement `git clone` and `git checkout` in `BuildAndPush`. (09ca8da)
 - [x] Task: Add `docker login` and push logic for the mirrored registry. (e8fbde4)
-- [ ] Task: Finish `RemoteUp` using `golang.org/x/crypto/ssh` for VM deployment.
+- [x] Task: Finish `RemoteUp` using `golang.org/x/crypto/ssh` for VM deployment. (4bb31a6)
 
 ## Phase 3: Observability & Network Integration
 **Goal:** Connect monitoring sinks and external DNS providers.
