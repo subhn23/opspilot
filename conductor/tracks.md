@@ -14,6 +14,12 @@ This file tracks all major tracks for the project. Each track has its own detail
 
 ---
 
+## Final Phase: Production Hardening
+- [~] **Track: Final Production Consolidation**
+  *Link: [./tracks/final_consolidation/](./tracks/final_consolidation/)*
+
+---
+
 ## Future Capabilities: Distributed Orchestration
-- [x] **Track: Remote Host & Federation Management**
+- [~] **Track: Remote Host & Federation Management**
   *Link: [./tracks/remote_federation/](./tracks/remote_federation/)*
