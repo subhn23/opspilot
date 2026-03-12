@@ -3,7 +3,7 @@
 ## Phase 1: Data Models & Migration
 **Goal:** Establish the `TargetHost` entity and update `Environment`.
 
-- [ ] Task: Create `TargetHost` model in `internal/models/models.go` with types (`local_proxmox`, `remote_ssh`, `federated_opspilot`).
+- [x] Task: Create `TargetHost` model in `internal/models/models.go` with types (`local_proxmox`, `remote_ssh`, `federated_opspilot`). (112e78d)
 - [ ] Task: Update the `Environment` model to belong to a `TargetHost`.
 - [ ] Task: Create a database migration script/seed to convert existing `HostNode` strings into `TargetHost` records.
 - [ ] Task: Implement a utility package for AES encryption/decryption of `AuthData` (SSH keys/tokens) at rest.
