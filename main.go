@@ -55,6 +55,14 @@ func main() {
 		})
 	})
 
+	// MFA Enrollment
+	r.GET("/auth/mfa/enroll", func(c *gin.Context) {
+		c.HTML(http.StatusOK, "mfa_enroll.html", gin.H{
+			"QRCode": "https://via.placeholder.com/200?text=QR+CODE+PLACEHOLDER",
+			"Secret": "JBSWY3DPEHPK3PXP",
+		})
+	})
+
 	// Topology API (HTMX support)
 	r.GET("/api/topology", func(c *gin.Context) {
 		nodes, edges := viz.BuildTopology()
