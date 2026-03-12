@@ -5,6 +5,7 @@ import (
 	"log"
 	"opspilot/internal/audit"
 	"opspilot/internal/config"
+	"opspilot/internal/models"
 	"os"
 	"strings"
 	"time"
@@ -101,6 +102,14 @@ func AuthMiddleware() gin.HandlerFunc {
 		if err != nil {
 			audit.LogAction(config.DB, uuid.Nil, "AUTH_FAILURE", "Invalid Token", c.ClientIP(), parts[1])
 			c.AbortWithStatusJSON(401, gin.H{"error": "Invalid or expired token"})
+			return
+		}
+
+		// Validate user existence (Session Validation)
+		var user models.User
+		if err := config.DB.First(&user, "id = ?", claims.UserID).Error; err != nil {
+			audit.LogAction(config.DB, uuid.Nil, "AUTH_FAILURE", "User Not Found", c.ClientIP(), claims.UserID.String())
+			c.AbortWithStatusJSON(401, gin.H{"error": "User no longer exists"})
 			return
 		}
 

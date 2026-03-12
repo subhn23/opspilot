@@ -94,9 +94,15 @@ func TestAuthMiddleware(t *testing.T) {
 	userID := uuid.New()
 	roleID := uuid.New()
 
-	// Initialize DB for audit logging in middleware
+	// Initialize DB for audit logging and user validation in middleware
 	config.DB, _ = gorm.Open(sqlite.Open(":memory:"), &gorm.Config{})
-	config.DB.AutoMigrate(&models.AuditLog{})
+	config.DB.AutoMigrate(&models.User{}, &models.Role{}, &models.AuditLog{})
+
+	// Create a user in the DB for the success case
+	user := models.User{ID: userID, Email: "test@test.com", RoleID: roleID}
+	if err := config.DB.Create(&user).Error; err != nil {
+		t.Fatalf("Failed to create user: %v", err)
+	}
 
 	// 1. Success Case: Valid Token
 	token, _ := GenerateToken(userID, roleID, secret, 1*time.Hour)
@@ -141,6 +147,22 @@ func TestAuthMiddleware(t *testing.T) {
 
 	if w.Code != 401 {
 		t.Errorf("Expected status 401 for invalid token, got %d", w.Code)
+	}
+
+	// 4. Failure Case: User does not exist in DB
+	// Clear the DB and re-migrate to ensure it's empty
+	config.DB, _ = gorm.Open(sqlite.Open(":memory:"), &gorm.Config{})
+	config.DB.AutoMigrate(&models.User{}, &models.Role{}, &models.AuditLog{})
+
+	nonExistentUserID := uuid.New()
+	token, _ = GenerateToken(nonExistentUserID, roleID, secret, 1*time.Hour)
+	w = httptest.NewRecorder()
+	c.Request, _ = http.NewRequest("GET", "/test", nil)
+	c.Request.Header.Set("Authorization", "Bearer "+token)
+	r.ServeHTTP(w, c.Request)
+
+	if w.Code != 401 {
+		t.Errorf("Expected status 401 for non-existent user, got %d", w.Code)
 	}
 }
 

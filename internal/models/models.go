@@ -120,17 +120,23 @@ type Edge struct {
 
 // BeforeCreate hook to generate UUIDs
 func (u *User) BeforeCreate(tx *gorm.DB) (err error) {
-	u.ID = uuid.New()
+	if u.ID == uuid.Nil {
+		u.ID = uuid.New()
+	}
 	return
 }
 
 func (r *Role) BeforeCreate(tx *gorm.DB) (err error) {
-	r.ID = uuid.New()
+	if r.ID == uuid.Nil {
+		r.ID = uuid.New()
+	}
 	return
 }
 
 func (e *Environment) BeforeCreate(tx *gorm.DB) (err error) {
-	e.ID = uuid.New()
+	if e.ID == uuid.Nil {
+		e.ID = uuid.New()
+	}
 	return
 }
 
