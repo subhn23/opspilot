@@ -8,7 +8,7 @@
 - [x] Task: Create a database migration script/seed to convert existing `HostNode` strings into `TargetHost` records. (5552988)
 - [x] Task: Implement a utility package for AES encryption/decryption of `AuthData` (SSH keys/tokens) at rest. (4a284d4)
 
-## Phase 2: Agentless SSH Deployments
+## Phase 2: Agentless SSH Deployments [checkpoint: 36d8a2b]
 **Goal:** Allow deployments to raw Linux machines without OpsPilot/Proxmox.
 
 - [x] Task: Create a UI page (`ui/templates/hosts.html`) to manage (Add/Edit/Delete) Static Hosts and input SSH keys. (7008c85)
