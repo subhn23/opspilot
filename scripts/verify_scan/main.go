@@ -30,7 +30,8 @@ func main() {
 
 	t.Run("Verification: Safe Scan", func() {
 		scanner := &MockScanner{Safe: true, Report: "No issues found"}
-		deployer := &deploy.Deployer{DB: db, Scanner: scanner}
+		deployer := deploy.NewDeployer(db)
+		deployer.Scanner = scanner
 
 		d := &models.Deployment{CommitHash: "safe123"}
 		db.Create(d)
@@ -53,7 +54,8 @@ func main() {
 
 	t.Run("Verification: Unsafe Scan", func() {
 		scanner := &MockScanner{Safe: false, Report: "CRITICAL: Log4Shell found"}
-		deployer := &deploy.Deployer{DB: db, Scanner: scanner}
+		deployer := deploy.NewDeployer(db)
+		deployer.Scanner = scanner
 
 		d := &models.Deployment{CommitHash: "unsafe456"}
 		db.Create(d)
