@@ -4,7 +4,7 @@
 **Goal:** Connect monitoring sinks and external DNS providers.
 
 - [x] Task: Implement the SSH-based Windows DNS client in `internal/dns/dns.go`. (711c5ce)
-- [ ] Task: Update `internal/metrics/metrics.go` to use the real Docker API for stats.
+- [x] Task: Update `internal/metrics/metrics.go` to use the real Docker API for stats. (390c0da)
 - [ ] Task: Implement `PushToVictoriaMetrics` in `internal/metrics/collector.go`.
 - [ ] Task: Update the Topology Map to include active Docker containers within each VM.
 
