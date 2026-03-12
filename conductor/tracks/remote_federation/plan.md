@@ -6,7 +6,7 @@
 - [x] Task: Create `TargetHost` model in `internal/models/models.go` with types (`local_proxmox`, `remote_ssh`, `federated_opspilot`). (112e78d)
 - [x] Task: Update the `Environment` model to belong to a `TargetHost`. (177815a)
 - [x] Task: Create a database migration script/seed to convert existing `HostNode` strings into `TargetHost` records. (5552988)
-- [ ] Task: Implement a utility package for AES encryption/decryption of `AuthData` (SSH keys/tokens) at rest.
+- [x] Task: Implement a utility package for AES encryption/decryption of `AuthData` (SSH keys/tokens) at rest. (4a284d4)
 
 ## Phase 2: Agentless SSH Deployments
 **Goal:** Allow deployments to raw Linux machines without OpsPilot/Proxmox.
