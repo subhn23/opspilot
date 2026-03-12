@@ -22,6 +22,12 @@ type GitClient interface {
 	Checkout(ctx context.Context, targetDir, commitHash string) error
 }
 
+type DockerClient interface {
+	Login(ctx context.Context, user, pass, registry string) error
+	Build(ctx context.Context, workingDir, tag string) error
+	Push(ctx context.Context, tag string) error
+}
+
 type RealGitClient struct{}
 
 func (g *RealGitClient) Clone(ctx context.Context, repoURL, targetDir string) error {
@@ -31,6 +37,23 @@ func (g *RealGitClient) Clone(ctx context.Context, repoURL, targetDir string) er
 
 func (g *RealGitClient) Checkout(ctx context.Context, targetDir, commitHash string) error {
 	cmd := exec.CommandContext(ctx, "git", "-C", targetDir, "checkout", commitHash)
+	return cmd.Run()
+}
+
+type RealDockerClient struct{}
+
+func (d *RealDockerClient) Login(ctx context.Context, user, pass, registry string) error {
+	cmd := exec.CommandContext(ctx, "docker", "login", "-u", user, "-p", pass, registry)
+	return cmd.Run()
+}
+
+func (d *RealDockerClient) Build(ctx context.Context, workingDir, tag string) error {
+	cmd := exec.CommandContext(ctx, "docker", "build", "-t", tag, workingDir)
+	return cmd.Run()
+}
+
+func (d *RealDockerClient) Push(ctx context.Context, tag string) error {
+	cmd := exec.CommandContext(ctx, "docker", "push", tag)
 	return cmd.Run()
 }
 
@@ -50,6 +73,7 @@ type Deployer struct {
 	Scanner Scanner
 	SSH     SSHClient
 	Git     GitClient
+	Docker  DockerClient
 	RepoURL string
 }
 
@@ -59,6 +83,7 @@ func NewDeployer(db *gorm.DB) *Deployer {
 		Scanner: &RealScanner{},
 		SSH:     &RealSSHClient{User: "root"},
 		Git:     &RealGitClient{},
+		Docker:  &RealDockerClient{},
 		RepoURL: os.Getenv("PROJECT_REPO_URL"),
 	}
 }
@@ -90,8 +115,27 @@ func (d *Deployer) BuildAndPush(ctx context.Context, deploy *models.Deployment) 
 		return fmt.Errorf("git checkout failed: %w", err)
 	}
 
-	// ... (build logic) ...
-	imageName := fmt.Sprintf("localhost:5000/app:%s", deploy.CommitHash)
+	// 2. Docker Login
+	registry := os.Getenv("REGISTRY_URL")
+	user := os.Getenv("REGISTRY_USER")
+	pass := os.Getenv("REGISTRY_PASS")
+	if registry != "" && user != "" && pass != "" {
+		if err := d.Docker.Login(ctx, user, pass, registry); err != nil {
+			d.updateStatus(deploy, "FAILED_BUILD")
+			return fmt.Errorf("docker login failed: %w", err)
+		}
+	}
+
+	// 3. Build
+	imageName := fmt.Sprintf("%s/app:%s", registry, deploy.CommitHash)
+	if registry == "" {
+		imageName = fmt.Sprintf("localhost:5000/app:%s", deploy.CommitHash)
+	}
+
+	if err := d.Docker.Build(ctx, tmpDir, imageName); err != nil {
+		d.updateStatus(deploy, "FAILED_BUILD")
+		return fmt.Errorf("docker build failed: %w", err)
+	}
 
 	// SECURITY SCAN
 	d.updateStatus(deploy, "SCANNING")
@@ -104,10 +148,12 @@ func (d *Deployer) BuildAndPush(ctx context.Context, deploy *models.Deployment) 
 		return fmt.Errorf("security scan failed: %s", report)
 	}
 
-	// ... (push logic) ...
+	// 4. Push
 	d.updateStatus(deploy, "PUSHING")
-	log.Printf("Pushing image %s to registry", imageName)
-	deploy.Logs += fmt.Sprintf("\n$ docker push %s\n(Mocked push success)", imageName)
+	if err := d.Docker.Push(ctx, imageName); err != nil {
+		d.updateStatus(deploy, "FAILED_PUSH")
+		return fmt.Errorf("docker push failed: %w", err)
+	}
 
 	d.updateStatus(deploy, "PUSHED")
 	return nil
@@ -117,7 +163,11 @@ func (d *Deployer) BuildAndPush(ctx context.Context, deploy *models.Deployment) 
 func (d *Deployer) RemoteUp(ctx context.Context, deploy *models.Deployment, targetIP string) error {
 	d.updateStatus(deploy, "DEPLOYING")
 
-	imageName := fmt.Sprintf("localhost:5000/app:%s", deploy.CommitHash)
+	registry := os.Getenv("REGISTRY_URL")
+	imageName := fmt.Sprintf("%s/app:%s", registry, deploy.CommitHash)
+	if registry == "" {
+		imageName = fmt.Sprintf("localhost:5000/app:%s", deploy.CommitHash)
+	}
 
 	// Command sequence
 	commands := []string{

@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"opspilot/internal/models"
+	"os"
 	"testing"
 
 	"gorm.io/driver/sqlite"
@@ -31,7 +32,7 @@ func TestScanImage(t *testing.T) {
 
 	t.Run("Safe Image", func(t *testing.T) {
 		mock := &MockScanner{Safe: true, Report: "Clean"}
-		deployer := &Deployer{Scanner: mock, Git: &MockGitClient{}}
+		deployer := &Deployer{Scanner: mock, Git: &MockGitClient{}, Docker: &MockDockerClient{}}
 
 		safe, report, err := deployer.ScanImage(ctx, "test-image")
 		if err != nil {
@@ -47,7 +48,7 @@ func TestScanImage(t *testing.T) {
 
 	t.Run("Unsafe Image", func(t *testing.T) {
 		mock := &MockScanner{Safe: false, Report: "Vulnerability Found"}
-		deployer := &Deployer{DB: setupTestDB(), Scanner: mock, Git: &MockGitClient{}}
+		deployer := &Deployer{DB: setupTestDB(), Scanner: mock, Git: &MockGitClient{}, Docker: &MockDockerClient{}}
 
 		deploy := &models.Deployment{CommitHash: "unsafe123"}
 		deployer.DB.Create(deploy)
@@ -99,7 +100,7 @@ func TestRemoteUp(t *testing.T) {
 	db := setupTestDB()
 	ctx := context.Background()
 	mockSSH := &MockSSHClient{MockOutput: "Done"}
-	deployer := &Deployer{DB: db, SSH: mockSSH}
+	deployer := &Deployer{DB: db, SSH: mockSSH, Git: &MockGitClient{}, Docker: &MockDockerClient{}}
 
 	deploy := &models.Deployment{
 		CommitHash: "abc1234",
@@ -134,7 +135,7 @@ func TestBuildAndPush(t *testing.T) {
 	db := setupTestDB()
 	ctx := context.Background()
 	mockScanner := &MockScanner{Safe: true, Report: "All good"}
-	deployer := &Deployer{DB: db, Scanner: mockScanner, Git: &MockGitClient{}}
+	deployer := &Deployer{DB: db, Scanner: mockScanner, Git: &MockGitClient{}, Docker: &MockDockerClient{}}
 
 	deploy := &models.Deployment{
 		CommitHash: "feat123",
@@ -175,8 +176,9 @@ func TestGitIntegration(t *testing.T) {
 	db := setupTestDB()
 	ctx := context.Background()
 	mockGit := &MockGitClient{}
+	mockDocker := &MockDockerClient{}
 	mockScanner := &MockScanner{Safe: true}
-	deployer := &Deployer{DB: db, Scanner: mockScanner, Git: mockGit}
+	deployer := &Deployer{DB: db, Scanner: mockScanner, Git: mockGit, Docker: mockDocker}
 
 	deploy := &models.Deployment{
 		CommitHash: "feat123",
@@ -208,5 +210,66 @@ func TestGitIntegration(t *testing.T) {
 	db.First(&updated, deploy.ID)
 	if updated.Status != "FAILED_BUILD" {
 		t.Errorf("Expected status FAILED_BUILD, got %s", updated.Status)
+	}
+}
+
+type MockDockerClient struct {
+	LoginCalled bool
+	BuildCalled bool
+	PushCalled  bool
+	LoginErr    error
+	BuildErr    error
+	PushErr     error
+}
+
+func (m *MockDockerClient) Login(ctx context.Context, user, pass, registry string) error {
+	m.LoginCalled = true
+	return m.LoginErr
+}
+
+func (m *MockDockerClient) Build(ctx context.Context, workingDir, tag string) error {
+	m.BuildCalled = true
+	return m.BuildErr
+}
+
+func (m *MockDockerClient) Push(ctx context.Context, tag string) error {
+	m.PushCalled = true
+	return m.PushErr
+}
+
+func TestDockerIntegration(t *testing.T) {
+	db := setupTestDB()
+	ctx := context.Background()
+	mockDocker := &MockDockerClient{}
+	mockGit := &MockGitClient{}
+	mockScanner := &MockScanner{Safe: true}
+	deployer := &Deployer{DB: db, Scanner: mockScanner, Git: mockGit, Docker: mockDocker}
+
+	os.Setenv("REGISTRY_URL", "localhost:5000")
+	os.Setenv("REGISTRY_USER", "user")
+	os.Setenv("REGISTRY_PASS", "pass")
+	defer os.Unsetenv("REGISTRY_URL")
+	defer os.Unsetenv("REGISTRY_USER")
+	defer os.Unsetenv("REGISTRY_PASS")
+
+	deploy := &models.Deployment{
+		CommitHash: "feat123",
+	}
+	db.Create(deploy)
+
+	err := deployer.BuildAndPush(ctx, deploy)
+
+	if err != nil {
+		t.Fatalf("BuildAndPush failed: %v", err)
+	}
+
+	if !mockDocker.LoginCalled {
+		t.Error("Docker Login was not called")
+	}
+	if !mockDocker.BuildCalled {
+		t.Error("Docker Build was not called")
+	}
+	if !mockDocker.PushCalled {
+		t.Error("Docker Push was not called")
 	}
 }
