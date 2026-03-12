@@ -1,6 +1,7 @@
 package main
 
 import (
+	"context"
 	"fmt"
 	"html/template"
 	"log"
@@ -39,7 +40,12 @@ func main() {
 		Collector: collector,
 	}
 
-	// 4. Initialize Visualizer
+	// 4. Initialize Registry Sync
+	syncService := &deployPkg.RealImageService{Docker: dockerCli}
+	registrySync := deployPkg.NewRegistrySync(db, "host1:5000", "host2:5000", syncService)
+	go registrySync.StartWorker(context.Background())
+
+	// 5. Initialize Visualizer
 	viz := visualizer.NewOpsVisualizer(db)
 
 	// 5. Initialize Router
