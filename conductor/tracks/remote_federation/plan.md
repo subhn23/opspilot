@@ -20,6 +20,6 @@
 **Goal:** Enable Master-Worker communication between OpsPilot instances.
 
 - [x] Task: Add a UI section to register a "Federated OpsPilot" (URL and API Token). (36a5ee6)
-- [ ] Task: Create `/api/federation/deploy` endpoint on the Worker node to accept incoming deployment payloads and trigger local execution.
+- [x] Task: Create `/api/federation/deploy` endpoint on the Worker node to accept incoming deployment payloads and trigger local execution. (5448efc)
 - [ ] Task: Implement a `FederatedClient` in `internal/deploy/` that the Master node uses to forward `BuildAndPush` and `RemoteUp` commands to the Worker node via HTTP POST.
 - [ ] Task: Add logic to `Deployer` to check the `TargetHost.Type`. If it's `federated_opspilot`, route the request through the `FederatedClient` instead of local Docker/SSH.
