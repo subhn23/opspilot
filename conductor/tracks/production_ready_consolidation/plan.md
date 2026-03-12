@@ -12,7 +12,7 @@
 **Goal:** Finalize the Terraform and Docker delivery pipelines.
 
 - [x] Task: Implement Terraform template mirroring logic in `internal/terraform/terraform.go`. (357857e)
-- [ ] Task: Securely pass Proxmox credentials to `TFEngine`.
+- [x] Task: Securely pass Proxmox credentials to `TFEngine`. (0e66b3f)
 - [ ] Task: Implement `git clone` and `git checkout` in `BuildAndPush`.
 - [ ] Task: Add `docker login` and push logic for the mirrored registry.
 - [ ] Task: Finish `RemoteUp` using `golang.org/x/crypto/ssh` for VM deployment.
