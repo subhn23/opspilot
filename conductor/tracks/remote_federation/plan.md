@@ -1,6 +1,6 @@
 # Implementation Plan: Remote Host & Federation Management
 
-## Phase 1: Data Models & Migration
+## Phase 1: Data Models & Migration [checkpoint: bba7f86]
 **Goal:** Establish the `TargetHost` entity and update `Environment`.
 
 - [x] Task: Create `TargetHost` model in `internal/models/models.go` with types (`local_proxmox`, `remote_ssh`, `federated_opspilot`). (112e78d)
