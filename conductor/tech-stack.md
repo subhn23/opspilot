@@ -12,6 +12,8 @@
 
 ## Infrastructure & Orchestration
 - **Terraform & terraform-exec:** The core tools for defining and provisioning the Proxmox virtual infrastructure. `terraform-exec` provides a Go-native wrapper to dynamically manage workspaces and execute apply/destroy commands.
+- **Agentless SSH Management:** Direct Docker/Docker-Compose orchestration on remote Linux hosts via SSH, bypassing the need for a local hypervisor during development and testing.
+- **Federated Orchestration:** Master-Worker API architecture for multi-datacenter management, allowing one OpsPilot instance to delegate tasks to remote workers via secure REST endpoints.
 - **Proxmox Virtual Environment:** The target hypervisor for managing the compute layer (Virtual Machines).
 - **Windows DNS:** Managed via PowerShell over SSH for automated internal record updates.
 - **Docker:** Used to containerize and deploy microservices onto the dynamically provisioned Virtual Machines.
