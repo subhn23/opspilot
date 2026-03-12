@@ -132,6 +132,9 @@ func TestHostsTemplate(t *testing.T) {
 	if !strings.Contains(body, "hx-get=\"/api/hosts\"") {
 		t.Error("Expected body to contain hx-get for hosts api")
 	}
+	if !strings.Contains(body, "For Federated OpsPilot, use the API Token") {
+		t.Error("Expected body to contain federation hint")
+	}
 }
 
 func TestHostsAPI(t *testing.T) {
