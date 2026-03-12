@@ -63,6 +63,39 @@ func main() {
 		})
 	})
 
+	// Audit Logs Page
+	r.GET("/audit", func(c *gin.Context) {
+		c.HTML(http.StatusOK, "audit_viewer.html", nil)
+	})
+
+	// Audit API (HTMX)
+	r.GET("/api/audit", func(c *gin.Context) {
+		var logs []models.AuditLog
+		db.Order("created_at desc").Limit(50).Find(&logs)
+
+		html := ""
+		for _, log := range logs {
+			html += fmt.Sprintf(`
+				<tr class="hover:bg-slate-50 transition-colors">
+					<td class="px-6 py-4 text-slate-600">%%s</td>
+					<td class="px-6 py-4 font-mono text-xs text-slate-500">%%s</td>
+					<td class="px-6 py-4"><span class="px-2 py-1 bg-indigo-100 text-indigo-700 rounded text-xs font-bold">%%s</span></td>
+					<td class="px-6 py-4 text-slate-800 font-medium">%%s</td>
+					<td class="px-6 py-4 text-slate-500">%%s</td>
+				</tr>`,
+				log.CreatedAt.Format("2006-01-02 15:04:05"),
+				log.UserID,
+				log.Action,
+				log.Target,
+				log.IPAddress,
+			)
+		}
+		if html == "" {
+			html = "<tr><td colspan='5' class='px-6 py-8 text-center text-slate-400'>No audit logs found.</td></tr>"
+		}
+		c.Data(http.StatusOK, "text/html; charset=utf-8", []byte(html))
+	})
+
 	// Topology API (HTMX support)
 	r.GET("/api/topology", func(c *gin.Context) {
 		nodes, edges := viz.BuildTopology()

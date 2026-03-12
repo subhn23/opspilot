@@ -1,0 +1,88 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Audit Logs | OpsPilot</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://unpkg.com/htmx.org@1.9.10"></script>
+</head>
+<body class="bg-slate-50 font-sans text-slate-900" x-data="{ sidebarOpen: false }">
+    <div class="flex h-screen overflow-hidden">
+        
+        <!-- Mobile Sidebar Overlay (Same as index) -->
+        <div x-show="sidebarOpen" @click="sidebarOpen = false" class="fixed inset-0 z-20 bg-black bg-opacity-50 lg:hidden"></div>
+
+        <!-- Sidebar (Same as index) -->
+        <aside :class="sidebarOpen ? 'translate-x-0' : '-translate-x-full'" class="fixed inset-y-0 left-0 z-30 w-64 bg-slate-900 text-white transition-transform duration-300 transform lg:translate-x-0 lg:static lg:inset-0">
+            <div class="flex items-center justify-center h-16 bg-indigo-600">
+                <span class="text-xl font-bold uppercase tracking-wider">OpsPilot</span>
+            </div>
+            <nav class="mt-4 px-4 space-y-2">
+                <a href="/" class="flex items-center p-3 rounded-lg hover:bg-slate-800 transition-colors">
+                    <span class="ml-3">Dashboard</span>
+                </a>
+                <a href="/audit" class="flex items-center p-3 rounded-lg bg-indigo-500 bg-opacity-25 border-l-4 border-indigo-500">
+                    <span class="ml-3">Audit Logs</span>
+                </a>
+                <a href="#" class="flex items-center p-3 rounded-lg hover:bg-slate-800 transition-colors">
+                    <span class="ml-3">Infrastructure Map</span>
+                </a>
+                <a href="#" class="flex items-center p-3 rounded-lg hover:bg-slate-800 transition-colors">
+                    <span class="ml-3">Deployments</span>
+                </a>
+                <a href="#" class="flex items-center p-3 rounded-lg hover:bg-slate-800 transition-colors">
+                    <span class="ml-3">Identity & RBAC</span>
+                </a>
+            </nav>
+        </aside>
+
+        <!-- Main Content -->
+        <div class="flex-1 flex flex-col overflow-hidden">
+            <!-- Top Header (Same as index) -->
+            <header class="h-16 bg-white border-b border-slate-200 flex items-center justify-between px-4 lg:px-8">
+                <button @click="sidebarOpen = true" class="p-2 rounded-md lg:hidden text-slate-600 hover:bg-slate-100">
+                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16m-7 6h7"></path></svg>
+                </button>
+                <div class="flex items-center space-x-4">
+                    <div class="text-sm font-medium text-slate-500 uppercase tracking-tight">User: <span class="text-indigo-600 font-bold">Admin</span></div>
+                    <div class="h-8 w-8 rounded-full bg-indigo-100 flex items-center justify-center text-indigo-700 font-bold">A</div>
+                </div>
+            </header>
+
+            <!-- Main Body -->
+            <main class="flex-1 overflow-y-auto p-4 lg:p-8">
+                <div class="flex justify-between items-center mb-8">
+                    <div>
+                        <h1 class="text-2xl font-bold text-slate-800">System Audit Logs</h1>
+                        <p class="text-slate-500">Compliance and security tracking for all platform mutations.</p>
+                    </div>
+                    <button hx-get="/api/audit" hx-target="#audit-table-body" class="bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-2 px-4 rounded-lg transition-colors">
+                        Refresh Logs
+                    </button>
+                </div>
+
+                <div class="bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden">
+                    <table class="w-full text-left border-collapse">
+                        <thead class="bg-slate-50 text-slate-500 uppercase text-xs font-bold">
+                            <tr>
+                                <th class="px-6 py-3">Timestamp</th>
+                                <th class="px-6 py-3">User ID</th>
+                                <th class="px-6 py-3">Action</th>
+                                <th class="px-6 py-3">Target</th>
+                                <th class="px-6 py-3">IP Address</th>
+                            </tr>
+                        </thead>
+                        <tbody class="divide-y divide-slate-100 text-sm" id="audit-table-body" hx-get="/api/audit" hx-trigger="load">
+                            <!-- Rows will be populated by HTMX -->
+                            <tr>
+                                <td colspan="5" class="px-6 py-8 text-center text-slate-400 italic">Loading logs...</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </main>
+        </div>
+    </div>
+</body>
+</html>

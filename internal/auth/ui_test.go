@@ -43,6 +43,32 @@ func TestMFAEnrollTemplate(t *testing.T) {
 	}
 }
 
+func TestAuditViewerTemplate(t *testing.T) {
+	gin.SetMode(gin.TestMode)
+	r := gin.Default()
+	r.LoadHTMLGlob("../../ui/templates/*")
+
+	r.GET("/audit", func(c *gin.Context) {
+		c.HTML(http.StatusOK, "audit_viewer.html", nil)
+	})
+
+	w := httptest.NewRecorder()
+	req, _ := http.NewRequest("GET", "/audit", nil)
+	r.ServeHTTP(w, req)
+
+	if w.Code != http.StatusOK {
+		t.Errorf("Expected status 200, got %d", w.Code)
+	}
+
+	body := w.Body.String()
+	if !contains(body, "System Audit Logs") {
+		t.Error("Expected body to contain 'System Audit Logs'")
+	}
+	if !contains(body, "hx-get=\"/api/audit\"") {
+		t.Error("Expected body to contain hx-get for audit api")
+	}
+}
+
 func contains(s, substr string) bool {
 	return len(s) >= len(substr) && (s == substr || find(s, substr))
 }
